@@ -21,3 +21,4 @@ Abstract: CAP has myriad features to help developers develop. And that means loc
 - [workspaces and monorepos](https://cap.cloud.sap/docs/guides/deployment/microservices#create-a-solution-monorepo)
 - other development kit facilities such as [linting](https://cap.cloud.sap/docs/tools/cds-lint/#usage-lint-cli), [init](https://cap.cloud.sap/docs/tools/cds-cli#cds-init) and [add](https://cap.cloud.sap/docs/tools/cds-cli#cds-add) etc
 - [local](https://cap.cloud.sap/docs/node.js/messaging#local-messaging) and [file-based](https://cap.cloud.sap/docs/node.js/messaging#file-based) messaging
+- [serving UIs](https://cap.cloud.sap/docs/get-started/in-a-nutshell#uis)
