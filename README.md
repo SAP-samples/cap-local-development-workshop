@@ -28,4 +28,4 @@ Abstract: CAP has myriad features to help developers develop. And that means loc
 Each of the following exercises touches on one or more of the topic areas above.
 
 - [00 - Setting up and getting to cds watch](exercises/00/)
-- [01 - SQLite, initial data and an introduction to the REPL](exercises/01/)
+- [01 - SQLite, initial data and a first look at profiles](exercises/01/)
