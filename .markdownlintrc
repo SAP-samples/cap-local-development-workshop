@@ -1,7 +1,8 @@
 {
   "comment": "Rules for tutorial and workshop Markdown content",
-  "MD004": { "style": "consistent" },
-  "MD009": { "br_spaces": 0 },
-  "MD013": false,
-  "MD033": false
+  "ul-style": { "style": "consistent" },
+  "no-trailing-spaces": { "br_spaces": 0 },
+  "line-length": false,
+  "no-inline-html": { "allowed_elements": [ "a" ] },
+  "blanks-around-headings": { "lines_above": 0 }
 }
