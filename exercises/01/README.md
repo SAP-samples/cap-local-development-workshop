@@ -64,9 +64,7 @@ curl -X DELETE localhost:4004/ex01/Books/251
 
 and you can check with the previous `curl` invocation that it's really gone.
 
-Move to the terminal where the CAP server is running and hit Enter, which will cause it to restart. Because the default mode for the use of SQLite at this point, with no explicit configuration, is in-memory (note the `--in-memory?` option in the expanded version of `cds w` which is `cds serve all --with-mocks --in-memory?`, and look up the meaning of the `?` in that last option specified).
-
-The deployment of the initial data to the in-memory SQLite database is redone and "The Raven" is back (check with the previous `curl` invocation again) ... no doubt to [continue repeating the word "Nevermore"].
+Move to the terminal where the CAP server is running and hit Enter, which will cause it to restart. Because the default mode for the use of SQLite at this point, with no explicit configuration, is in-memory (see [footnote 2](#footnote-2)), the deployment of the initial data to the in-memory SQLite database is redone and "The Raven" is back (check with the previous `curl` invocation again) ... no doubt to [continue repeating the word "Nevermore"].
 
 <!-- TODO: NEXT, DEPLOY TO DB.SQLITE FILE -->
 
@@ -94,6 +92,13 @@ annotate sap.capire.bookshop.Books with @fiori.draft.enabled;
 ```
 
 This adds a second key (`isActiveEntity`) to the entity, and we don't want to get into that at this early stage.
+
+<a name="footnote-2"></a>
+### Footnote 2
+
+Note the `--in-memory?` option in the expanded version of `cds w` which is `cds serve all --with-mocks --in-memory?`, and look up the meaning of the `?` in that last option specified.
+
+
 
 [productive use]: https://cap.cloud.sap/docs/guides/databases-sqlite#sqlite-in-production
 [command line shell for SQLite]: https://sqlite.org/cli.html
