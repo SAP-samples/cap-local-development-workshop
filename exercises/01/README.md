@@ -42,6 +42,7 @@ It's worth pausing here to reflect on this; while not specifically a "local deve
 ## Footnotes
 
 <a name="footnote-1"></a>
+### Footnote 1
 
 They are already exposed but only in the `AdminService` which is annotated to protect it, with:
 
