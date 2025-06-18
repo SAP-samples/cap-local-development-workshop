@@ -66,7 +66,7 @@ and you can check with the previous `curl` invocation that it's really gone.
 
 Move to the terminal where the CAP server is running and hit Enter, which will cause it to restart. Because the default mode for the use of SQLite at this point, with no explicit configuration, is in-memory (note the `--in-memory?` option in the expanded version of `cds w` which is `cds serve all --with-mocks --in-memory?`, and look up the meaning of the `?` in that last option specified).
 
-The deployment of the initial data to the in-memory SQLite database is redone and "The Raven" is back (check with the previous `curl` invocation again) ... no doubt to [continue repeating the word "Nevermore"].o
+The deployment of the initial data to the in-memory SQLite database is redone and "The Raven" is back (check with the previous `curl` invocation again) ... no doubt to [continue repeating the word "Nevermore"].
 
 <!-- TODO: NEXT, DEPLOY TO DB.SQLITE FILE -->
 
