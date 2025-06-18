@@ -6,7 +6,7 @@ If you have everything set up for CAP Node.js development already, including Nod
 
 ## Set up working environment
 
-Here are the options.
+Here are the options. Choose one of them, and then [check the CAP Node.js version](#check-cap-nodejs-version).
 
 ### Option 1 - dev container and VS Code installed locally
 
@@ -14,7 +14,7 @@ If you already have or can install VS Code on your machine, then this option may
 
 - Ensure you have installed the [Dev Containers] extension in VS Code.
 - Clone this repo `git clone https://github.com/SAP-samples/cap-local-development-workshop`.
-- Open the directory containing the clone with VS Code `code cap-local-development-workshop`.
+- Open the directory containing the clone with VS Code, for example like this: `code cap-local-development-workshop`, or via the VS Code menu.
 - Choose to "Reopen in Container" when asked:
   ![reopen in container dialogue box](assets/vscode-reopen-in-container.png)
 
@@ -30,9 +30,9 @@ For our purposes, [GitHub codespaces] are essentially the same as a locally runn
 
 ### Option 3 - dev space in SAP Business Application Studio
 
-This option is very much similar to the previous two options, in that it provides a VS Code based development environment and (Linux-based) container. If you have a [trial account on the SAP Business Technology Platform], a [subscription to the SAP Business Application Studio], and the appropriate role collections assigned, then you can use this option.
+This option is very much similar to the previous two options, in that it provides a VS Code based development environment and container. If you have a [trial account on the SAP Business Technology Platform], a [subscription to the SAP Business Application Studio], and the appropriate role collections assigned, then you can use this option.
 
-- Go to the SAP Business Application Studio from your [trial landing page](https://account.hanatrial.ondemand.com/trial/).
+- Go to the SAP Business Application Studio from your [SAP BTP trial landing page]
 - Choose to "Create Dev Space", giving it a name and selecting the "Full Stack Cloud Application" type:
   ![creating a dev space](assets/bas-create-dev-space.png)
 - Once the dev space is started, enter it, use the "Clone from Git" option to clone this repo, and choose to open it when prompted:
@@ -52,4 +52,4 @@ Once you have everything set up, check that CAP Node.js is installed (it should 
 [home of this repo]: https://github.com/SAP-samples/cap-local-development-workshop
 [trial account on the SAP Business Technology Platform]: https://developers.sap.com/tutorials/hcp-create-trial-account.html
 [subscription to the SAP Business Application Studio]: https://developers.sap.com/tutorials/appstudio-onboarding.html
-[trial landing page]: https://account.hanatrial.ondemand.com/trial/
+[SAP BTP trial landing page]: https://account.hanatrial.ondemand.com/trial/#/home/trial
