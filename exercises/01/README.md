@@ -14,7 +14,7 @@ Add the following to a new file `srv/ex01-service.cds`:
 
 ```cds
 using { sap.capire.bookshop as my } from '../db/schema';
-service Ex01Service {
+@path: '/ex01' service Ex01Service {
   entity Books as projection on my.Books;
 }
 ```
@@ -33,11 +33,42 @@ Also, it is automatically made available via the (default) OData adapter too:
 ```log
 [cds] - serving Ex01Service {
   impl: 'node_modules/@sap/cds/libx/_runtime/common/Service.js',
-  path: '/odata/v4/ex01'
+  path: '/ex01'
 }
 ```
 
 It's worth pausing here to reflect on this; while not specifically a "local development" facility, the fact that we get CRUD+Q handled completely and automatically for us for any service like this, without writing a line of code, is "bonkers good".
+
+Inspect the books data like this:
+
+```shell
+curl -s localhost:4004/ex01/Books \
+| jq -r '.value|map([.ID, .title])[]|@tsv'
+```
+
+This should emit something like this:
+
+```text
+201     Wuthering Heights
+207     Jane Eyre
+251     The Raven
+252     Eleonora
+271     Catweazle
+```
+
+Delete "The Raven":
+
+```shell
+curl -X DELETE localhost:4004/ex01/Books/251
+```
+
+and you can check with the previous `curl` invocation that it's really gone.
+
+Move to the terminal where the CAP server is running and hit Enter, which will cause it to restart. Because the default mode for the use of SQLite at this point, with no explicit configuration, is in-memory (note the `--in-memory?` option in the expanded version of `cds w` which is `cds serve all --with-mocks --in-memory?`, and look up the meaning of the `?` in that last option specified).
+
+The deployment of the initial data to the in-memory SQLite database is redone and "The Raven" is back (check with the previous `curl` invocation again) ... no doubt to [continue repeating the word "Nevermore"].o
+
+<!-- TODO: NEXT, DEPLOY TO DB.SQLITE FILE -->
 
 ## Footnotes
 
@@ -56,15 +87,16 @@ service AdminService @(requires:'admin') { ... }
 curl -s -u 'alice:' localhost:4004/odata/v4/admin/Books
 ```
 
-But to be honest there's another reason, which is that they're also annotated (in `app/admin-books/fiori-service.cds` with `@fiori.draft.enabled`:
+But to be honest there's another reason, which is that they're also annotated (in `app/admin-books/fiori-service.cds`) as being draft-enabled:
 
 ```cds
 annotate sap.capire.bookshop.Books with @fiori.draft.enabled;
 ```
 
-which adds a second key to the entity, and we don't want to get into that at this early stage.
+This adds a second key (`isActiveEntity`) to the entity, and we don't want to get into that at this early stage.
 
 [productive use]: https://cap.cloud.sap/docs/guides/databases-sqlite#sqlite-in-production
 [command line shell for SQLite]: https://sqlite.org/cli.html
 [provide initial data]: https://cap.cloud.sap/docs/guides/databases#providing-initial-data
 [developer friendly version of no-code]: https://qmacro.org/blog/posts/2024/11/07/five-reasons-to-use-cap/#1-the-code-is-in-the-framework-not-outside-of-it
+[continue repeating the word "Nevermore"]: https://en.wikipedia.org/wiki/The_Raven#:~:text=the%20raven%20seems%20to%20further%20antagonize%20the%20protagonist%20with%20its%20repetition%20of%20the%20word%20%22nevermore%22
