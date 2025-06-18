@@ -1,8 +1,10 @@
-# Exercise 00 - Setting up
+# Exercise 00 - Setting up and getting to cds watch
 
 This workshop is all about local development, but we want to ensure that everyone has the same experience regardless of the machine, operating system and admin rights to install software. So there are different options you can take to set up and get ready to run through the exercises.
 
-If you have everything set up for CAP Node.js development already, including Node.js 22 or 24, the latest release of CAP Node.js ([9.0.0+]), and an editor you're comfortable using, then you're all set. If not, then we have various options for you from which to choose.
+If you have everything set up for CAP Node.js development already, including Node.js 22 or 24, the latest release of CAP Node.js ([9.0.0+]), and an editor you're comfortable using, then you're all set and you can jump straight to and continue from the [Check CAP Node.js version](#check-cap-nodejs-version) section.
+
+If not, then we have various options for you from which to choose.
 
 ## Set up working environment
 
@@ -46,6 +48,96 @@ Once you have everything set up, check that CAP Node.js is installed (it should 
 
 <!-- TODO: BAS dev spaces are still on CAP Node.js 8 - check in July -->
 
+## Create new CAP Node.js project
+
+We'll explore local development friendly features using a simple CAP Node.js project, which you should set up now. It's based on the `sample` [facet].
+
+From the terminal prompt, initialize a new project called `myproj`, adding the `sample` facet; then move into that project's directory and install the NPM package dependencies:
+
+```shell
+cds init --add sample myproj \
+  && cd $_ \
+  && npm install
+```
+
+The output should appear similar to this:
+
+```text
+creating new CAP project in ./myproj
+
+adding nodejs
+adding sample
+
+successfully created project – continue with cd myproj
+
+find samples on https://github.com/SAP-samples/cloud-cap-samples
+learn about next steps at https://cap.cloud.sap
+
+added 127 packages, and audited 128 packages in 1m
+
+23 packages are looking for funding
+  run `npm fund` for details
+
+  found 0 vulnerabilities
+```
+
+## Start the fast development cycle with cds watch
+
+With the previous shell invocation you created a project from scratch. And now it's time to invoke `cds watch`, a command so powerful and fundamental to CAP Node.js rapid development that the humble [Capire entry for it] doesn't really do it justice :-)
+
+```shell
+cds watch
+```
+
+Take a brief look at the output, we'll be revisiting some of this in the next exercise!
+
+```text
+cds serve all --with-mocks --in-memory?
+( live reload enabled for browsers )
+
+        ___________________________
+
+[cds] - loaded model from 9 file(s):
+
+  node_modules/@sap/cds/srv/outbox.cds
+  app/services.cds
+  app/common.cds
+  app/browse/fiori-service.cds
+  app/admin-books/fiori-service.cds
+  srv/cat-service.cds
+  srv/admin-service.cds
+  db/schema.cds
+  node_modules/@sap/cds/common.cds
+
+[cds] - connect using bindings from: { registry: '~/.cds-services.json' }
+[cds] - connect to db > sqlite { url: ':memory:' }
+  > init from db/data/sap.capire.bookshop-Genres.csv
+  > init from db/data/sap.capire.bookshop-Books_texts.csv
+  > init from db/data/sap.capire.bookshop-Books.csv
+  > init from db/data/sap.capire.bookshop-Authors.csv
+/> successfully deployed to in-memory database.
+
+[cds] - using auth strategy {
+  kind: 'mocked',
+  impl: 'node_modules/@sap/cds/lib/srv/middlewares/auth/basic-auth'
+}
+
+[cds] - serving AdminService { impl: 'srv/admin-service.js', path: '/odata/v4/admin' }
+[cds] - serving CatalogService { impl: 'srv/cat-service.js', path: '/odata/v4/catalog' }
+
+[cds] - server listening on { url: 'http://localhost:4004' }
+[cds] - server launched in: 497.749ms
+[cds] - [ terminate with ^C ]
+```
+
+Here are a few things to notice, given that we're in development mode here (i.e. we haven't specified "production" mode):
+
+- the CDS model that is loaded is made up of content from various source files
+- by default there's a SQLite-powered in-memory database in play
+- there has been some initial data loaded into various entities
+- mock authentication is used automatically
+- two services are made available, via the OData adapter, and there are custom implementations for each of them
+
 [GitHub codespaces]: https://github.com/features/codespaces
 [9.0.0+]: https://cap.cloud.sap/docs/releases/may25
 [Dev Containers]: https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers
@@ -53,3 +145,5 @@ Once you have everything set up, check that CAP Node.js is installed (it should 
 [trial account on the SAP Business Technology Platform]: https://developers.sap.com/tutorials/hcp-create-trial-account.html
 [subscription to the SAP Business Application Studio]: https://developers.sap.com/tutorials/appstudio-onboarding.html
 [SAP BTP trial landing page]: https://account.hanatrial.ondemand.com/trial/#/home/trial
+[facet]: https://cap.cloud.sap/docs/tools/cds-cli#cds-add
+[Capire entry for it]: https://cap.cloud.sap/docs/tools/cds-cli#cds-watch
