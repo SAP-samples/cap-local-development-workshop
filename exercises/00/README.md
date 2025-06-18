@@ -6,9 +6,11 @@ If you have everything set up for CAP Node.js development already, including Nod
 
 If not, then we have various options for you from which to choose.
 
+Once you've got everything set up, you'll finish this exercise by initializing a new CAP Node.js project and starting up the CAP server.
+
 ## Set up working environment
 
-Here are the options. Choose one of them, and then [check the CAP Node.js version](#check-cap-nodejs-version).
+Here are the options. Choose one of them, and then jump forward to the [check the CAP Node.js version](#check-cap-nodejs-version) section.
 
 ### Option 1 - dev container and VS Code installed locally
 
@@ -42,7 +44,7 @@ This option is very much similar to the previous two options, in that it provide
 
 ## Check CAP Node.js version
 
-Once you have everything set up, check that CAP Node.js is installed (it should be) by opening up a terminal (menu option "Terminal -> New Terminal") and running `cds v`. The version for `@sap/cds-dk` should be [9.0.0+]. Here's an example from a terminal prompt from Option 1, but regardless of the option you chose, it should look similar:
+Once you have your working environment set up, check that CAP Node.js is installed (it should be) by opening up a terminal (menu option "Terminal -> New Terminal") and running `cds v`. The version for `@sap/cds-dk` should be [9.0.0+]. Here's an example from a terminal prompt from Option 1, but regardless of the option you chose, it should look similar:
 
 ![running cds v in a terminal prompt](assets/vscode-shell-cds-version.png)
 
@@ -50,7 +52,7 @@ Once you have everything set up, check that CAP Node.js is installed (it should 
 
 ## Create new CAP Node.js project
 
-We'll explore local development friendly features using a simple CAP Node.js project, which you should set up now. It's based on the `sample` [facet].
+We'll explore local development friendly features starting with a simple CAP Node.js project, which you should create now. It's based on the `sample` [facet], which provides a ready-to-go sample schema and set of services, plus annotations and some actual data.
 
 From the terminal prompt, initialize a new project called `myproj`, adding the `sample` facet; then move into that project's directory and install the NPM package dependencies:
 
@@ -130,9 +132,9 @@ cds serve all --with-mocks --in-memory?
 [cds] - [ terminate with ^C ]
 ```
 
-Here are a few things to notice, given that we're in development mode here (i.e. we haven't specified "production" mode):
+Here are a few things to notice, given that by default we're in development mode here (i.e. we haven't specified "production" mode):
 
-- the CDS model that is loaded is made up of content from various source files
+- the CDS model that is loaded is made up of content from various sources
 - by default there's a SQLite-powered in-memory database in play
 - there has been some initial data loaded into various entities
 - mock authentication is used automatically
