@@ -6,7 +6,7 @@ In this exercise you'll explore the facilities on offer in this space, using the
 
 > Throughout this exercise keep the `cds watch` process running and in its own terminal instance; if necessary, open a second terminal to run any other commands you need, so you've always got the `cds watch` process running and visible.
 
-## Add a new service definition Ex01Service
+## Add a new service definition
 
 To illustrate the simple power of `cds watch` plus the ultimate [developer friendly version of no-code] (the code is in the framework, not anything you write or even generate as boilerplate), add a new service definition to expose the books in a straightforward (non-administrative) way to keep things simple (see [footnote 1](#footnote-1)).
 
@@ -144,7 +144,7 @@ Now when you make modifications to the data, the modifications persist within th
 
 Now that we have some data (and the schema into which it fits) that we can look at, let's do that. The database engine is local, the database is local, so everything is at hand.
 
-The `sqlite3` executable is known as a command line shell as it offers a prompt-based environment where we can explore; but we can also fire off one-shot commands too.
+The `sqlite3` executable is known as SQLite's "command line shell" as it offers a prompt-based environment where we can explore (but we can also fire off one-shot commands too - see [footnote-4](#footnote-4)).
 
 Let's start out by looking at what we have.
 
@@ -155,7 +155,6 @@ sqlite3 db.sqlite
 This should land us in the command line shell:
 
 ```text
-; sqlite3 db.sqlite
 SQLite version 3.40.1 2022-12-28 14:03:47
 Enter ".help" for usage hints.
 sqlite>
@@ -193,7 +192,7 @@ Ex01Service_Genres                    sap_common_Languages_texts
 Ex01Service_Genres_texts
 ```
 
-Knowing that the CDS model, at the Data Definition Language (DDL) layer, consists predominantly of tables and views, we can dig in and see which is what with something we learned from [The Art and Science of CAP], in particular [in Episode 8]:
+Knowing that the CDS model, at the Data Definition Language ([DDL]) layer, consists predominantly of tables and views, we can dig in and see which is what with something we learned from [The Art and Science of CAP], in particular [in Episode 8] (output reduced for brevity):
 
 ```text
 sqlite> select type,name from sqlite_schema order by type;
@@ -226,8 +225,6 @@ view|Ex01Service_Currencies
 ...
 ```
 
-> The output here has been heavily reduced for brevity.
-
 What about the data?
 
 ```text
@@ -241,7 +238,7 @@ Catweazle|22
 
 > The `sqlite3` shell has completion, you might want to try it out, it's triggered with the Tab key, and especially useful for long table names such as the one here.
 
-Of course, often we will want to perhaps adjust or augment the data in the database directly, for testing purposes (to avoid having to modify the source initial data and then re-deploy and re-start the CAP server). Let's try that now:
+Sometimes we will want to perhaps adjust or augment the data in the database directly, for testing purposes (to avoid having to modify the source initial data and then re-deploy and re-start the CAP server). That's easy because everything is local. Let's try that now:
 
 ```text
 sqlite> update sap_capire_bookshop_Books set stock = 1000 where ID = 271;
@@ -298,11 +295,19 @@ Note the `--in-memory?` option in the expanded version of `cds w` which is `cds 
     persistent one is configured.
 ```
 
-
 <a name="footnote-3"></a>
 ### Footnote 3
 
 There is [no particular strict convention for SQLite database filename extensions]; choosing `.db` or `.sqlite` are decent choices though.
+
+<a name="footnote-4"></a>
+### Footnote 4
+
+An example of a one-shot command, i.e. a single `sqlite3` invocation, is:
+
+```shell
+sqlite3 db.sqlite 'select count(*) from sap_capire_bookshop_Authors'
+```
 
 [productive use]: https://cap.cloud.sap/docs/guides/databases-sqlite#sqlite-in-production
 [command line shell for SQLite]: https://sqlite.org/cli.html
@@ -314,3 +319,4 @@ There is [no particular strict convention for SQLite database filename extension
 [convention over configuration]: https://qmacro.org/blog/posts/2019/11/06/cap-is-important-because-it's-not-important/#start-smart
 [The Art and Science of CAP]: https://qmacro.org/blog/posts/2024/12/06/the-art-and-science-of-cap/
 [in Episode 8]: https://qmacro.org/blog/posts/2025/02/14/tasc-notes-part-8/#exploring-in-sqlite
+[DDL]: https://cap.cloud.sap/docs/guides/databases#rules-for-generated-ddl
