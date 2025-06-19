@@ -397,12 +397,136 @@ Create a new "hitchhikers" directory and copy them in from this workshop reposit
 
 ```bash
 mkdir -p db/hitchhikers/data/ \
-  && cp ../attic/sap.capire.bookshop-*.csv $_ \
+  && cp ../exercises/01/assets/data/json/* $_ \
   && touch db/hitchhikers/index.cds
 ```
 
+> Note that this time, just to illustrate the possibility, the data files are JSON not CSV. This works too, but JSON files are only supported in development mode.
 
+Add this to the effective configuration with a new section in `package.json#cds.requires` similar to the previous one, so that the entire `cds` stanza looks like this:
 
+```json
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": ":memory:"
+        }
+      },
+      "[classics]": {
+        "initdata": {
+          "model": "db/classics/"
+        }
+      },
+      "[hitchhikers]": {
+        "initdata": {
+          "model": "db/hitchhikers/"
+        }
+      }
+    }
+  }
+```
+
+Now you can restart the CAP server using the "hitchhikers" profile:
+
+```bash
+cds w --profile hitchhikers
+```
+
+and enjoy a different initial data set:
+
+```log
+  > init from db/hitchhikers/data/sap.capire.bookshop-Books.json
+  > init from db/hitchhikers/data/sap.capire.bookshop-Authors.json
+```
+
+Naturally this also works the same way when deploying, for example:
+
+```bash
+cds deploy --to sqlite:hitchhikers.db --profile hitchhikers
+```
+
+which results in:
+
+```log
+  > init from db/hitchhikers/data/sap.capire.bookshop-Books.json
+  > init from db/hitchhikers/data/sap.capire.bookshop-Authors.json
+/> successfully deployed to hitchhikers.db
+```
+
+### Combine the features
+
+You can combine this feature with the ability to configure file based persistence in `cds.requires` too. Try this:
+
+```json
+      "[hitchhikers]": {
+        "initdata": {
+          "model": "db/hitchhikers/"
+        },
+        "db": {
+          "kind": "sqlite",
+          "credentials": {
+            "url": "hitchhikers.db"
+          }
+        }
+      }
+```
+
+Having that `db` entry within the `[hitchhikers]` profile entry will override the "profile-independent" values (whether they're implicit or explicit) when the "hitchhikers" profile is specified via the `--profile` option on relevant `cds` commands.
+
+Feel free to explore this combination if you have time!
+
+## Understand the difference between sample and initial data
+
+Until now we've been managing and using initial data. There's also support for using _sample_ data locally. Briefly, sample data is exclusively for tests and demos, in other words for local development only, not for production.
+
+The CAP server will look for and load sample data from `data/` directories inside a project root based `test/` directory parent.
+
+To wrap up this exercise, let's explore.
+
+First, we should stop the CAP server (with Ctrl-C), then restart it in "watch" mode but without a specific profile:
+
+```bash
+cds w
+```
+
+Next, let's create a symbolic link like this
+
+```text
+db/data/ --> db/hitchhikers/data/
+```
+
+so that we can treat the "hitchhikers" data set as the default initial data and run without an explicit profile for now:
+
+```bash
+cd db \
+  && ln -s hitchhikers/data . \
+  && cd -
+```
+
+When the CAP server restarts it should show the "init from ..." log lines taking data from these "hitchhikers" JSON files.
+
+Now add some sample data in a new directory `test/data/`, thus:
+
+```bash
+mkdir -p test/data/ \
+  && cp ../exercises/01/assets/test/data/csv/* $_
+```
+
+As soon as you do this, on restarting, the CAP server will emit these log lines:
+
+```log
+  > init from test/data/sap.capire.bookshop-Books.csv
+  > init from db/hitchhikers/data/sap.capire.bookshop-Books.json
+  > init from db/hitchhikers/data/sap.capire.bookshop-Authors.json
+```
+
+showing that initial and sample data has been loaded.
+
+However, as the Capire documentation on how to [provide initial data] points out, `test/data/` based sample data is for tests and demos only, and not for production.
+
+<!-- TODO: SHOW CDS BUILD EXAMPLE -->
 
 
 ---
