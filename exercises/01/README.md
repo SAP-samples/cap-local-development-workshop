@@ -43,7 +43,7 @@ Also, it is automatically made available via the (default) OData adapter too:
 
 Inspect the books data like this:
 
-```shell
+```bash
 curl -s localhost:4004/ex01/Books \
 | jq -r '.value|map([.ID, .title])[]|@tsv'
 ```
@@ -62,7 +62,7 @@ This should emit:
 
 Banish "The Raven":
 
-```shell
+```bash
 curl -X DELETE localhost:4004/ex01/Books/251
 ```
 
@@ -70,13 +70,29 @@ and you can check with the previous `curl` invocation that it's really gone.
 
 Move to the terminal where the CAP server is running and hit Enter, which will cause it to restart. Because the default mode for the use of SQLite at this point, with no explicit configuration, is in-memory (see [footnote 2](#footnote-2)), the deployment of the initial data to the in-memory SQLite database is redone and "The Raven" is back (check with the previous `curl` invocation again) ... no doubt to [continue repeating the word "Nevermore"].
 
+We can check this default configuration with [cds env]:
+
+```bash
+cds env requires.db
+```
+
+which should return something like this, reflecting the implicit out-of-the-box default for development (see [footnote-5](#footnote-5)):
+
+```text
+{
+  impl: '@cap-js/sqlite',
+  credentials: { url: ':memory:' },
+  kind: 'sqlite'
+}
+```
+
 ### Deploy to a persistent file
 
 We can also use a persistent database file, useful if we want the outcome of our OData requests to persist across CAP server restarts.
 
 Use:
 
-```shell
+```bash
 cds deploy --to sqlite
 ```
 
@@ -130,7 +146,23 @@ That's because we need to explicitly configure this setup. So let's do that now,
 > }
 > ```
 >
-> What's _your_ preference?
+> As we'll see later in this exercise, this comes in handy sometimes!
+
+While we're here thinking about configuration and the [cds env], let's check that same node now:
+
+```bash
+cds env requires.db
+```
+
+The output should reflect what we've added, replacing the earlier default (note the value for `url` is different):
+
+```text
+{
+  impl: '@cap-js/sqlite',
+  credentials: { url: 'db.sqlite' },
+  kind: 'sqlite'
+}
+```
 
 And when you trigger a CAP server restart (with Enter) you should see something like this:
 
@@ -148,7 +180,7 @@ The `sqlite3` executable is known as SQLite's "command line shell" as it offers 
 
 Let's start out by looking at what we have.
 
-```shell
+```bash
 sqlite3 db.sqlite
 ```
 
@@ -246,7 +278,7 @@ sqlite> update sap_capire_bookshop_Books set stock = 1000 where ID = 271;
 
 Yep, that works:
 
-```shell
+```bash
 ; curl -s 'localhost:4004/ex01/Books/271?$select=title,stock' | jq .
 {
   "@odata.context": "$metadata#Books/$entity",
@@ -255,6 +287,125 @@ Yep, that works:
   "ID": 271
 }
 ```
+
+## Manage your initial data
+
+Did you notice these lines in the CAP server log output:
+
+```log
+  > init from db/data/sap.capire.bookshop-Genres.csv
+  > init from db/data/sap.capire.bookshop-Books_texts.csv
+  > init from db/data/sap.capire.bookshop-Books.csv
+  > init from db/data/sap.capire.bookshop-Authors.csv
+/> successfully deployed to in-memory database.
+```
+
+You will have also seen them in deploy output, for example `cds deploy --to sqlite` produces this:
+
+```log
+  > init from db/data/sap.capire.bookshop-Genres.csv
+  > init from db/data/sap.capire.bookshop-Books_texts.csv
+  > init from db/data/sap.capire.bookshop-Books.csv
+  > init from db/data/sap.capire.bookshop-Authors.csv
+/> successfully deployed to db.sqlite
+```
+
+Capire has details on how to [provide initial data] and the convention is to place CSV files with names corresponding to the fully qualified entity names in a `data/` directory adjacent to the definitions in the CDS model, typically (as implied in the log output here) directly within the `db/` directory.
+
+### Maintain a separate initial data collection
+
+Sometimes it's necessary to maintain and use different starting sets of initial data. You can manage this with the combination of convention (the mechanism looks for `data/` directories directly within the `db/`, `srv/` and `app/` directories) and the [profile] concept.
+
+Let's try this out.
+
+First, we'll switch back to the in-memory SQLite facility so we can more easily and immediately see the effect of our actions in the CAP server log (if the database is in-memory then a deployment is done each and every time the server restarts, which makes sense when you think about it).
+
+Rather than remove the configuration we added earlier to `package.json`, we can adjust it to explicitly specify the `url` to be `:memory:`, so it looks like this:
+
+```json
+"cds": {
+  "requires": {
+    "db": {
+      "kind": "sqlite",
+      "credentials": {
+        "url": ":memory:"
+      }
+    }
+  }
+}
+```
+
+Once a CAP server restart is triggered, there will be the familiar "init from ..." lines to see.
+
+OK. The name of the `data/` directory is special (see [footnote-6](#footnote-6)), and its relative location is also special; if we move it to somewhere else, the files containing the initial data won't get picked up automatically. Let's try that now:
+
+```bash
+mkdir db/classics/ \
+  && mv db/data/ db/classics/
+```
+
+At this point, the log output from the restarted CAP server doesn't show any "init from ..." lines, as no initial data was found (in the expected / default location(s)).
+
+But we can tell the CAP server about this "classics" initial data collection and assign a name to it, in the form of a [profile].
+
+Let's do that now, by adding a new node to `package.json#cds.requires` so that it looks like this:
+
+```json
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": ":memory:"
+        }
+      },
+      "[classics]": {
+        "initdata": {
+          "model": "db/classics/"
+        }
+      }
+    }
+  }
+```
+
+This doesn't have any positive effect yet; we need a couple more things. First, we need to add an empty CDS model file in the form of `index.cds` to the new `db/classics/` directory; this is so the CDS model compiler acknowledges this new "classics" directory and treats it as part of the model, including any initial data loading requirements:
+
+```bash
+touch db/classics/index.cds
+```
+
+Now we need to actually go to the CAP server, stop it (with Ctrl-C) and restart it, specifying this new "classics" name as a profile:
+
+```bash
+cds w --profile classics
+```
+
+Lo and behold, the initial data in the CSV files in `db/classics/data/` is now loaded!
+
+```log
+  > init from db/classics/data/sap.capire.bookshop-Genres.csv
+  > init from db/classics/data/sap.capire.bookshop-Books_texts.csv
+  > init from db/classics/data/sap.capire.bookshop-Books.csv
+  > init from db/classics/data/sap.capire.bookshop-Authors.csv
+```
+
+### Add a second initial data collection
+
+To illustrate this technique more fully, let's add a second initial data collection in a similar way. There are a couple of CSV data files for the author Douglas Adams and the books in his (increasingly inaccurately named) [Hitchhiker's Guide To The Galaxy] trilogy.
+
+Create a new "hitchhikers" directory and copy them in from this workshop repository's [attic/] directory, like this:
+
+```bash
+mkdir -p db/hitchhikers/data/ \
+  && cp ../attic/sap.capire.bookshop-*.csv $_ \
+  && touch db/hitchhikers/index.cds
+```
+
+
+
+
+
+---
 
 ## Footnotes
 
@@ -269,7 +420,7 @@ service AdminService @(requires:'admin') { ... }
 
 (in `srv/admin-service.cds`). Yes, we can embrace the mock authentication:
 
-```shell
+```bash
 curl -s -u 'alice:' localhost:4004/odata/v4/admin/Books
 ```
 
@@ -303,11 +454,25 @@ There is [no particular strict convention for SQLite database filename extension
 <a name="footnote-4"></a>
 ### Footnote 4
 
-An example of a one-shot command, i.e. a single `sqlite3` invocation, is:
+An example of a one-shot command, i.e. a single `sqlite3` invocation at the shell prompt, is:
 
-```shell
+```bash
 sqlite3 db.sqlite 'select count(*) from sap_capire_bookshop_Authors'
 ```
+
+<a name="footnote-5"></a>
+### Footnote 5
+
+The development profile is the default; with `cds env requires.db --profile production` we get:
+
+```text
+undefined
+```
+
+<a name="footnote-6"></a>
+### Footnote 6
+
+The name can also be `csv/` which is also "special".
 
 [productive use]: https://cap.cloud.sap/docs/guides/databases-sqlite#sqlite-in-production
 [command line shell for SQLite]: https://sqlite.org/cli.html
@@ -320,3 +485,7 @@ sqlite3 db.sqlite 'select count(*) from sap_capire_bookshop_Authors'
 [The Art and Science of CAP]: https://qmacro.org/blog/posts/2024/12/06/the-art-and-science-of-cap/
 [in Episode 8]: https://qmacro.org/blog/posts/2025/02/14/tasc-notes-part-8/#exploring-in-sqlite
 [DDL]: https://cap.cloud.sap/docs/guides/databases#rules-for-generated-ddl
+[profile]: https://cap.cloud.sap/docs/node.js/cds-env#profiles
+[cds env]: https://cap.cloud.sap/docs/tools/cds-cli#cds-env
+[Hitchhiker's Guide To The Galaxy]: https://en.wikipedia.org/wiki/The_Hitchhiker%27s_Guide_to_the_Galaxy
+[attic/]: https://github.com/SAP-samples/cap-local-development-workshop/tree/main/attic
