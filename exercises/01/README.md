@@ -19,7 +19,7 @@ using { sap.capire.bookshop as my } from '../db/schema';
 }
 ```
 
-When you save the file the CAP server process restarts automatically, and you should notice a couple of things. First, it is gathered up in the collection of CDS model sources:
+When you save the file the CAP server process restarts automatically, and you should notice a few things. The definition is gathered up in the collection of CDS model sources:
 
 ```log
 [cds] - loaded model from 10 file(s):
@@ -38,6 +38,17 @@ Also, it is automatically made available via the (default) OData adapter too:
 ```
 
 > It's worth pausing here to reflect on this; while not specifically a "local development" facility, the fact that we get CRUD+Q handled completely and automatically for us for any service like this, without writing a line of code, is [insanely great].
+
+In addition, there is some loading of data into an in-memory database:
+
+```log
+[cds] - connect to db > sqlite { url: ':memory:' }
+  > init from db/data/sap.capire.bookshop-Genres.csv
+  > init from db/data/sap.capire.bookshop-Books_texts.csv
+  > init from db/data/sap.capire.bookshop-Books.csv
+  > init from db/data/sap.capire.bookshop-Authors.csv
+/> successfully deployed to in-memory database.
+```
 
 ## Dig in to the SQLite storage
 
@@ -60,6 +71,8 @@ This should emit:
 
 ### Experience the default in-memory mode
 
+From the CAP server log output we observed that there's a SQLite powered in-memory database in play. Let's see how that affects things.
+
 👉 Banish "The Raven":
 
 ```bash
@@ -68,7 +81,20 @@ curl -X DELETE localhost:4004/ex01/Books/251
 
 and you can check with the previous `curl` invocation that it's really gone.
 
-Move to the terminal where the CAP server is running and hit Enter, which will cause it to restart. Because the default mode for the use of SQLite at this point, with no explicit configuration, is in-memory (see [footnote 2](#footnote-2)), the deployment of the initial data to the in-memory SQLite database is redone and "The Raven" is back (check with the previous `curl` invocation again) ... no doubt to [continue repeating the word "Nevermore"].
+👉 Move to the terminal where the CAP server is running and hit Enter, which will cause it to restart.
+
+As we'll see directly in a moment, the default mode for the use of SQLite, with no explicit configuration, is in-memory (see [footnote 2](#footnote-2)). Consequently deployment of the initial data to the in-memory SQLite database is redone:
+
+```log
+[cds] - connect to db > sqlite { url: ':memory:' }
+  > init from db/data/sap.capire.bookshop-Genres.csv
+  > init from db/data/sap.capire.bookshop-Books_texts.csv
+  > init from db/data/sap.capire.bookshop-Books.csv
+  > init from db/data/sap.capire.bookshop-Authors.csv
+/> successfully deployed to in-memory database.
+```
+
+and "The Raven" is back (check with the previous `curl` invocation again) ... no doubt to [continue repeating the word "Nevermore"].
 
 👉 Check this default configuration with [cds env]:
 
@@ -120,7 +146,7 @@ That's because we need to explicitly configure this setup.
 }
 ```
 
-> We could of course have specified a custom name for the database file, such as `bookshop.db`, but why fight CAP's wonderful [convention over configuration]? Incidentally, we would have had to specify the custom name within a `credentials` section of what we've just added:
+> We could have specified a custom name for the database file, such as `bookshop.db`, but why fight CAP's wonderful [convention over configuration]? Incidentally, we would have had to specify the custom name within a `credentials` section of what we've just added:
 >
 > ```json
 > "cds": {
@@ -150,7 +176,7 @@ That's because we need to explicitly configure this setup.
 > }
 > ```
 >
-> As we'll see later in this exercise, this comes in handy sometimes!
+> As we'll see in the next exercise, this comes in handy sometimes!
 
 👉 While we're here thinking about configuration and the [cds env], let's check that same node now:
 
@@ -158,7 +184,7 @@ That's because we need to explicitly configure this setup.
 cds env requires.db
 ```
 
-The output should reflect what we've added, replacing the earlier default (note the value for `url` is different):
+The output should reflect what we've added, replacing the earlier default. Specifically the value for `url` is different, going from `:memory:` to `db.sqlite`:
 
 ```text
 {
@@ -168,13 +194,13 @@ The output should reflect what we've added, replacing the earlier default (note 
 }
 ```
 
-And when you trigger a CAP server restart (with Enter) you should see something like this:
+And when the CAP server restarts you should see something like this:
 
 ```log
 [cds] - connect to db > sqlite { url: 'db.sqlite' }
 ```
 
-Notice what you _don't_ see too - there are no "init from ..." log lines now as there is no deployment (which is the mechanism to which this data loading belongs) to be done - the CAP server will not try to deploy to something that's persistent like our database file.
+Notice too what you _don't_ see - there are no "init from ..." log lines now as there is no deployment (which is the mechanism to which this data loading belongs) to be done - the CAP server will not try and deploy to something that's persistent like our database file, without our say so.
 
 Now when you make modifications to the data, the modifications persist within the database file, across CAP server restarts too of course.
 
@@ -182,9 +208,9 @@ Now when you make modifications to the data, the modifications persist within th
 
 Now that we have some data (and the schema into which it fits) that we can look at, let's do that. The database engine is local, the database is local, so everything is at hand.
 
-The `sqlite3` executable is known as SQLite's "command line shell" as it offers a prompt-based environment where we can explore (but we can also fire off one-shot commands too - see [footnote-4](#footnote-4)).
+The `sqlite3` executable is known as SQLite's "command line shell" as it offers a prompt-based environment where we can explore (see [footnote-4](#footnote-4)).
 
-👉 Let's start out by looking at what we have:
+👉 Invoke the executable, specifying our database file:
 
 ```bash
 sqlite3 db.sqlite
@@ -234,7 +260,7 @@ Ex01Service_Genres_texts
 
 Knowing that - at the Data Definition Language ([DDL]) layer - the CDS model consists predominantly of tables and views, we can dig in and see which artifact is what with something we learned from [The Art and Science of CAP], in particular [in Episode 8] where we looked at the `sqlite_schema`.
 
-👉 Execute this:
+👉 In the SQLite shell, where you'll execute this and the next few commands, try this:
 
 ```sql
 select type,name from sqlite_schema order by type;
@@ -296,14 +322,19 @@ Sometimes we will want to perhaps adjust or augment the data in the database dir
 
 👉 Let's try that now:
 
-```text
-sqlite> update sap_capire_bookshop_Books set stock = 1000 where ID = 271;
+```sql
+update sap_capire_bookshop_Books set stock = 1000 where ID = 271;
 ```
 
-Yep, that works:
+👉 Now, exit the SQLite shell, then perform an OData READ operation to see if that has taken effect:
 
 ```bash
-; curl -s 'localhost:4004/ex01/Books/271?$select=title,stock' | jq .
+curl -s 'localhost:4004/ex01/Books/271?$select=title,stock' | jq .
+```
+
+Yep, looks like it did:
+
+```json
 {
   "@odata.context": "$metadata#Books/$entity",
   "title": "Catweazle",
@@ -314,9 +345,11 @@ Yep, that works:
 
 ## Understand the difference between initial and sample data
 
-Thus far we've been managing and using initial data. There's also support for using _sample_ data locally. Briefly, sample data is exclusively for tests and demos, in other words for local development only, not for production.
+Thus far we've been managing and using _initial_ data. There's also support for using _sample_ data locally.
 
-The CAP server will look for and load sample data from `data/` directories not within the standard `db/`, `srv/` and `app/` directories, but inside a project root based `test/` directory parent:
+Briefly, sample data is exclusively for tests and demos, in other words for local development only, not for production.
+
+The CAP server will look for and load sample data from `data/` directories _not_ within the standard `db/`, `srv/` and `app/` directories, but inside a project root based `test/` directory parent:
 
 ```text
 .
@@ -331,7 +364,7 @@ Let's explore this sample data concept now.
 
 ### Add a temporary Sales entity to the service
 
-For the sake of keeping things simple, let's assume we want to think of our authors, books and genres initial "master" data as ultimately destined for production, and explore the sample data concept with some "transactional" data in the form of some basic sales records, sample data that we only want while we're developing locally.
+For the sake of keeping things simple, let's assume we want to think of our authors, books and genres as initial "master" data as ultimately destined for production, and explore the sample data concept with some "transactional" data in the form of some basic sales records, sample data that we only want while we're developing locally.
 
 👉 In a new file called `services.cds` add this:
 
@@ -360,7 +393,9 @@ cds add data \
   --force \
 ```
 
-You should see something like this (the `--force` option here isn't stricly necessary but useful in case we want to re-run this invocation later):
+> The `--force` option here isn't stricly necessary but useful in case we want to re-run this invocation later.
+
+You should see something like this:
 
 ```log
 using '--force' ... existing files will be overwritten
@@ -372,17 +407,17 @@ successfully added features to your project
 
 ### Re-deploy to db.sqlite
 
-The CAP server will have restarted, but we'll need to re-deploy, because currently our persistent storage (the SQLite `db.sqlite` file) contains neither the new `Sales` entity nor the sales records themselves, as we can see:
+The CAP server will have restarted, but we'll need to re-deploy, because currently our persistent storage (the SQLite `db.sqlite` file) contains neither DDL statements for the new `Sales` entity nor the sales records themselves, as we can see:
 
 ```bash
 ; sqlite3 db.sqlite
 SQLite version 3.40.1 2022-12-28 14:03:47
 Enter ".help" for usage hints.
-sqlite> select type, name from sqlite_schema where name like '%Sales%';
+sqlite> select type,name from sqlite_schema where name like '%Sales%';
 sqlite>
 ```
 
-So let's re-deploy. Now that we have the persistent (and default `db.sqlite` filename based) configuration defined in `cds.requires.db` (in `package.json`) we can simply invoke `cds deploy` without any options, as it will look at `cds.requires.db` to work out what to do.
+So let's re-deploy. Now that we have the persistent (and default `db.sqlite` filename based) configuration defined in `package.json#cds.requires.db` we can simply invoke `cds deploy` without any options, as it will look at `cds.requires.db` to work out what to do.
 
 👉 Make the deployment:
 
@@ -403,7 +438,7 @@ This should show:
 
 Hey, look at that - the sales data from `test/data/Ex01Service.Sales.csv` is included!
 
-👉 Let's check that:
+👉 Let's check that (first making sure the CAP server has restarted - give it a nudge with Enter if needed):
 
 ```bash
 curl -s localhost:4004/ex01/Sales | jq .
@@ -437,19 +472,19 @@ This should emit something similar to this:
 }
 ```
 
-Great! But let's make sure this really is just local sample data.
+Great! But let's make sure these sales records really are considered just local sample data.
 
 ### Perform a build
 
-With the cds [build] command we can prepare a deployment.
+With the cds [build] command we can prepare a deployment. Let's do that.
 
-👉 Let's use `DEBUG=build` to see everything that happens, including all the files that are taken into account:
+👉 Using `DEBUG=build` to see everything that happens, including all the files that are taken into account, run `build`:
 
 ```bash
 DEBUG=build cds build --for hana
 ```
 
-This produces a lot of log output, a lot of which has been omitted here for brevity:
+This produces a lot of log output, much of which has been omitted here for brevity:
 
 ```log
 [cli] - determining build tasks for project [/work/scratch/myproj].
@@ -476,7 +511,7 @@ done > wrote output to:
 build completed in 411 ms
 ```
 
-There are some data files included ... but we can see that the ones from `test/data/` are _not_:
+The data files containing the _initial_ data (files in `db/data/`) are included, but the sample data file (in `test/data/`) is not:
 
 ```bash
 ; DEBUG=build cds build --for hana | grep -E '\/data\/'
@@ -490,9 +525,14 @@ There are some data files included ... but we can see that the ones from `test/d
    gen/db/src/gen/data/sap.capire.bookshop-Genres.hdbtabledata
 ```
 
-Excellent!
+We can see that initial data, in `test/`, is only for local sample and demo purposes.
 
---- Questions
+That's the end of this exercise!
+
+---
+
+## Questions
+
 If you finish earlier than your fellow participants, you might like to ponder these questions. There isn't always a single correct answer and there are no prizes - they're just to give you something else to think about.
 
 1. What was the reason for using a file specifically called `services.cds` when you extended the `Ex01Service` with a new `Sales` entity?
@@ -546,7 +586,7 @@ There is [no particular strict convention for SQLite database filename extension
 <a name="footnote-4"></a>
 ### Footnote 4
 
-An example of a one-shot command, i.e. a single `sqlite3` invocation at the shell prompt, is:
+We can also invoke one-shot commands too. An example of a one-shot command, i.e. a single `sqlite3` invocation at the shell prompt, is:
 
 ```bash
 sqlite3 db.sqlite 'select count(*) from sap_capire_bookshop_Authors'
