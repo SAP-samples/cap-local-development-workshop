@@ -491,10 +491,12 @@ First, we should stop the CAP server (with Ctrl-C), then restart it in "watch" m
 cds w
 ```
 
-Next, let's create a symbolic link like this
+Next, let's create a symbolic link that will look like this:
 
 ```text
-db/data/ --> db/hitchhikers/data/
++----------+      +----------------------+
+| db/data/ |----->| db/hitchhikers/data/ |
++----------+      +----------------------+
 ```
 
 so that we can treat the "hitchhikers" data set as the default initial data and run without an explicit profile for now:
