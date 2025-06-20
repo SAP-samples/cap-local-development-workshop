@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+addEx01Service() {
+  cat << EOF > srv/ex01-service.cds
+using { sap.capire.bookshop as my } from '../db/schema';
+@path: '/ex01' service Ex01Service {
+  entity Books as projection on my.Books;
+}
+EOF
+}
+
+addCdsRequiresDbSqlite() {
+  local tempfile
+  tempfile="$(mktemp)"
+  cp package.json "$tempfile" \
+    && jq '. + { cds: { requires: { db: { kind: "sqlite" } } } }' "$tempfile" > package.json \
+    && rm "$tempfile"
+}
+
+deployToSqlite() {
+  cds deploy --to sqlite
+}
+
+updateStockForCatweazle() {
+  sqlite3 db.sqlite 'update sap_capire_bookshop_Books set stock = 1000 where ID = 271'
+}
+
+extendServiceWithSales() {
+  cat << EOF > services.cds
+using { cuid } from '@sap/cds/common';
+using { Ex01Service } from './srv/ex01-service';
+
+extend service Ex01Service with {
+  entity Sales : cuid {
+    date: Date;
+    book: Association to Ex01Service.Books;
+    quantity: Integer;
+  }
+}
+EOF
+}
+
+generateSampleSalesData() {
+  cds add data \
+    --filter Sales \
+    --records 3 \
+    --out test/data/ \
+    --force
+}
+
+runBuild() {
+  cds build --for hana
+}
+
+main() {
+
+  addEx01Service
+  addCdsRequiresDbSqlite
+  deployToSqlite
+  updateStockForCatweazle
+  extendServiceWithSales
+  generateSampleSalesData
+  deployToSqlite
+  runBuild
+
+}
+
+main "$@"

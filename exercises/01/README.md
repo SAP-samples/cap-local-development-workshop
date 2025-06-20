@@ -1,4 +1,4 @@
-# Exercise 01 - SQLite, initial data and a first look at profiles
+# Exercise 01 - cds watch, SQLite, initial data and sample data
 
 While not really appropriate for [productive use], SQLite shines in local development environments and allows for the tightest feedback loop. It's no second class database system either, as you'll see; via the modern `@cap-js/sqlite` database service implementation it provides full support for all kinds of CQL constructions such as path expressions. And with the [command line shell for SQLite], it's easy to interact with locally and natively. Along with with one of CAP's great features for local development and fast boostrapping - the ability to [provide initial data] - it's a combination that's hard to beat.
 
@@ -10,7 +10,7 @@ In this exercise you'll explore the facilities on offer in this space, using the
 
 To illustrate the simple power of `cds watch` plus the ultimate [developer friendly version of no-code] (the code is in the framework, not anything you write or even generate as boilerplate), add a new service definition to expose the books in a straightforward (non-administrative) way to keep things simple (see [footnote 1](#footnote-1)).
 
-Add the following to a new file `srv/ex01-service.cds`:
+👉 Add the following to a new file `srv/ex01-service.cds`:
 
 ```cds
 using { sap.capire.bookshop as my } from '../db/schema';
@@ -41,7 +41,7 @@ Also, it is automatically made available via the (default) OData adapter too:
 
 ## Dig in to the SQLite storage
 
-Inspect the books data like this:
+👉 Inspect the books data like this:
 
 ```bash
 curl -s localhost:4004/ex01/Books \
@@ -60,7 +60,7 @@ This should emit:
 
 ### Experience the default in-memory mode
 
-Banish "The Raven":
+👉 Banish "The Raven":
 
 ```bash
 curl -X DELETE localhost:4004/ex01/Books/251
@@ -70,7 +70,7 @@ and you can check with the previous `curl` invocation that it's really gone.
 
 Move to the terminal where the CAP server is running and hit Enter, which will cause it to restart. Because the default mode for the use of SQLite at this point, with no explicit configuration, is in-memory (see [footnote 2](#footnote-2)), the deployment of the initial data to the in-memory SQLite database is redone and "The Raven" is back (check with the previous `curl` invocation again) ... no doubt to [continue repeating the word "Nevermore"].
 
-We can check this default configuration with [cds env]:
+👉 Check this default configuration with [cds env]:
 
 ```bash
 cds env requires.db
@@ -86,11 +86,13 @@ which should return something like this, reflecting the implicit out-of-the-box 
 }
 ```
 
+Note that there is no `cds` section within `package.json` at this point; this really is a built-in default.
+
 ### Deploy to a persistent file
 
 We can also use a persistent database file, useful if we want the outcome of our OData requests to persist across CAP server restarts.
 
-Use:
+👉 Use:
 
 ```bash
 cds deploy --to sqlite
@@ -98,13 +100,15 @@ cds deploy --to sqlite
 
 to deploy the CDS model, and the initial data, to a file whose name defaults to `db.sqlite` (see [footnote-3](#footnote-3)).
 
-Nudge the CAP server to restart as before (move to the terminal where it's running and hit Enter) ... and notice that nothing has changed:
+👉 Nudge the CAP server to restart as before (move to the terminal where it's running and hit Enter) ... and notice that nothing has changed:
 
 ```log
 [cds] - connect to db > sqlite { url: ':memory:' }
 ```
 
-That's because we need to explicitly configure this setup. So let's do that now, by adding this to `package.json`:
+That's because we need to explicitly configure this setup.
+
+👉 So let's do that now, by adding this to `package.json`:
 
 ```json
 "cds": {
@@ -148,7 +152,7 @@ That's because we need to explicitly configure this setup. So let's do that now,
 >
 > As we'll see later in this exercise, this comes in handy sometimes!
 
-While we're here thinking about configuration and the [cds env], let's check that same node now:
+👉 While we're here thinking about configuration and the [cds env], let's check that same node now:
 
 ```bash
 cds env requires.db
@@ -170,6 +174,8 @@ And when you trigger a CAP server restart (with Enter) you should see something 
 [cds] - connect to db > sqlite { url: 'db.sqlite' }
 ```
 
+Notice what you _don't_ see too - there are no "init from ..." log lines now as there is no deployment (which is the mechanism to which this data loading belongs) to be done - the CAP server will not try to deploy to something that's persistent like our database file.
+
 Now when you make modifications to the data, the modifications persist within the database file, across CAP server restarts too of course.
 
 ### Work directly at the database layer with the SQLite CLI
@@ -178,7 +184,7 @@ Now that we have some data (and the schema into which it fits) that we can look 
 
 The `sqlite3` executable is known as SQLite's "command line shell" as it offers a prompt-based environment where we can explore (but we can also fire off one-shot commands too - see [footnote-4](#footnote-4)).
 
-Let's start out by looking at what we have.
+👉 Let's start out by looking at what we have:
 
 ```bash
 sqlite3 db.sqlite
@@ -192,7 +198,9 @@ Enter ".help" for usage hints.
 sqlite>
 ```
 
-How about looking at what artifacts are in there:
+How about looking at what artifacts are in there?
+
+👉 Try the `.tables` command:
 
 ```text
 sqlite> .tables
@@ -224,10 +232,17 @@ Ex01Service_Genres                    sap_common_Languages_texts
 Ex01Service_Genres_texts
 ```
 
-Knowing that the CDS model, at the Data Definition Language ([DDL]) layer, consists predominantly of tables and views, we can dig in and see which is what with something we learned from [The Art and Science of CAP], in particular [in Episode 8] (output reduced for brevity):
+Knowing that - at the Data Definition Language ([DDL]) layer - the CDS model consists predominantly of tables and views, we can dig in and see which artifact is what with something we learned from [The Art and Science of CAP], in particular [in Episode 8] where we looked at the `sqlite_schema`.
+
+👉 Execute this:
+
+```sql
+select type,name from sqlite_schema order by type;
+```
+
+which should emit a long list, similar to this (output reduced for brevity):
 
 ```text
-sqlite> select type,name from sqlite_schema order by type;
 index|sqlite_autoindex_sap_common_Languages_1
 index|sqlite_autoindex_sap_common_Currencies_1
 index|sqlite_autoindex_sap_capire_bookshop_Books_texts_1
@@ -259,8 +274,15 @@ view|Ex01Service_Currencies
 
 What about the data?
 
+👉 Try this:
+
+```sql
+select title,stock from sap_capire_bookshop_Books;
+```
+
+which should show:
+
 ```text
-sqlite> select title,stock from sap_capire_bookshop_Books;
 Wuthering Heights|12
 Jane Eyre|11
 The Raven|333
@@ -270,7 +292,9 @@ Catweazle|22
 
 > The `sqlite3` shell has completion, you might want to try it out, it's triggered with the Tab key, and especially useful for long table names such as the one here.
 
-Sometimes we will want to perhaps adjust or augment the data in the database directly, for testing purposes (to avoid having to modify the source initial data and then re-deploy and re-start the CAP server). That's easy because everything is local. Let's try that now:
+Sometimes we will want to perhaps adjust or augment the data in the database directly, for testing purposes (to avoid having to modify the source initial data and then re-deploy and re-start the CAP server). That's easy because everything is local.
+
+👉 Let's try that now:
 
 ```text
 sqlite> update sap_capire_bookshop_Books set stock = 1000 where ID = 271;
@@ -288,21 +312,88 @@ Yep, that works:
 }
 ```
 
-## Manage your initial data
+## Understand the difference between initial and sample data
 
-Did you notice these lines in the CAP server log output:
+Thus far we've been managing and using initial data. There's also support for using _sample_ data locally. Briefly, sample data is exclusively for tests and demos, in other words for local development only, not for production.
 
-```log
-  > init from db/data/sap.capire.bookshop-Genres.csv
-  > init from db/data/sap.capire.bookshop-Books_texts.csv
-  > init from db/data/sap.capire.bookshop-Books.csv
-  > init from db/data/sap.capire.bookshop-Authors.csv
-/> successfully deployed to in-memory database.
+The CAP server will look for and load sample data from `data/` directories not within the standard `db/`, `srv/` and `app/` directories, but inside a project root based `test/` directory parent:
+
+```text
+.
+├── db
+│   └── data  <-- current initial data location
+├── srv
+└── test
+    └── data  <-- sample data location
 ```
 
-You will have also seen them in deploy output, for example `cds deploy --to sqlite` produces this:
+Let's explore this sample data concept now.
+
+### Add a temporary Sales entity to the service
+
+For the sake of keeping things simple, let's assume we want to think of our authors, books and genres initial "master" data as ultimately destined for production, and explore the sample data concept with some "transactional" data in the form of some basic sales records, sample data that we only want while we're developing locally.
+
+👉 In a new file called `services.cds` add this:
+
+```cds
+using { cuid } from '@sap/cds/common';
+using { Ex01Service } from './srv/ex01-service';
+
+extend service Ex01Service with {
+  entity Sales : cuid {
+    date: Date;
+    book: Association to Ex01Service.Books;
+    quantity: Integer;
+  }
+}
+```
+
+### Generate some sample sales data
+
+👉 Next, use `cds add` with the `data` facet to create a CSV file with sample data for this new entity:
+
+```bash
+cds add data \
+  --filter Sales \
+  --records 3 \
+  --out test/data/ \
+  --force \
+```
+
+You should see something like this (the `--force` option here isn't stricly necessary but useful in case we want to re-run this invocation later):
 
 ```log
+using '--force' ... existing files will be overwritten
+adding data
+  creating test/data/Ex01Service.Sales.csv
+
+successfully added features to your project
+```
+
+### Re-deploy to db.sqlite
+
+The CAP server will have restarted, but we'll need to re-deploy, because currently our persistent storage (the SQLite `db.sqlite` file) contains neither the new `Sales` entity nor the sales records themselves, as we can see:
+
+```bash
+; sqlite3 db.sqlite
+SQLite version 3.40.1 2022-12-28 14:03:47
+Enter ".help" for usage hints.
+sqlite> select type, name from sqlite_schema where name like '%Sales%';
+sqlite>
+```
+
+So let's re-deploy. Now that we have the persistent (and default `db.sqlite` filename based) configuration defined in `cds.requires.db` (in `package.json`) we can simply invoke `cds deploy` without any options, as it will look at `cds.requires.db` to work out what to do.
+
+👉 Make the deployment:
+
+```bash
+cds deploy
+```
+
+This should show:
+
+```log
+  > init from test/data/Ex01Service.Sales.csv
   > init from db/data/sap.capire.bookshop-Genres.csv
   > init from db/data/sap.capire.bookshop-Books_texts.csv
   > init from db/data/sap.capire.bookshop-Books.csv
@@ -310,226 +401,101 @@ You will have also seen them in deploy output, for example `cds deploy --to sqli
 /> successfully deployed to db.sqlite
 ```
 
-Capire has details on how to [provide initial data] and the convention is to place CSV files with names corresponding to the fully qualified entity names in a `data/` directory adjacent to the definitions in the CDS model, typically (as implied in the log output here) directly within the `db/` directory.
+Hey, look at that - the sales data from `test/data/Ex01Service.Sales.csv` is included!
 
-### Maintain a separate initial data collection
+👉 Let's check that:
 
-Sometimes it's necessary to maintain and use different starting sets of initial data. You can manage this with the combination of convention (the mechanism looks for `data/` directories directly within the `db/`, `srv/` and `app/` directories) and the [profile] concept.
+```bash
+curl -s localhost:4004/ex01/Sales | jq .
+```
 
-Let's try this out.
-
-First, we'll switch back to the in-memory SQLite facility so we can more easily and immediately see the effect of our actions in the CAP server log (if the database is in-memory then a deployment is done each and every time the server restarts, which makes sense when you think about it).
-
-Rather than remove the configuration we added earlier to `package.json`, we can adjust it to explicitly specify the `url` to be `:memory:`, so it looks like this:
+This should emit something similar to this:
 
 ```json
-"cds": {
-  "requires": {
-    "db": {
-      "kind": "sqlite",
-      "credentials": {
-        "url": ":memory:"
-      }
+{
+  "@odata.context": "$metadata#Sales",
+  "value": [
+    {
+      "ID": "26243430-a307-4ba4-a72e-c4ce44653fa2",
+      "date": "2003-09-29",
+      "book_ID": 271,
+      "quantity": 26
+    },
+    {
+      "ID": "26243431-d479-4891-9c09-b2c88f7a43c2",
+      "date": "2011-05-03",
+      "book_ID": 207,
+      "quantity": 29
+    },
+    {
+      "ID": "26243432-68ce-4a10-b1e1-678e40f51346",
+      "date": "2009-08-24",
+      "book_ID": 207,
+      "quantity": 69
     }
-  }
+  ]
 }
 ```
 
-Once a CAP server restart is triggered, there will be the familiar "init from ..." lines to see.
+Great! But let's make sure this really is just local sample data.
 
-OK. The name of the `data/` directory is special (see [footnote-6](#footnote-6)), and its relative location is also special; if we move it to somewhere else, the files containing the initial data won't get picked up automatically. Let's try that now:
+### Perform a build
 
-```bash
-mkdir db/classics/ \
-  && mv db/data/ db/classics/
-```
+With the cds [build] command we can prepare a deployment.
 
-At this point, the log output from the restarted CAP server doesn't show any "init from ..." lines, as no initial data was found (in the expected / default location(s)).
-
-But we can tell the CAP server about this "classics" initial data collection and assign a name to it, in the form of a [profile].
-
-Let's do that now, by adding a new node to `package.json#cds.requires` so that it looks like this:
-
-```json
-  "cds": {
-    "requires": {
-      "db": {
-        "kind": "sqlite",
-        "credentials": {
-          "url": ":memory:"
-        }
-      },
-      "[classics]": {
-        "initdata": {
-          "model": "db/classics/"
-        }
-      }
-    }
-  }
-```
-
-This doesn't have any positive effect yet; we need a couple more things. First, we need to add an empty CDS model file in the form of `index.cds` to the new `db/classics/` directory; this is so the CDS model compiler acknowledges this new "classics" directory and treats it as part of the model, including any initial data loading requirements:
+👉 Let's use `DEBUG=build` to see everything that happens, including all the files that are taken into account:
 
 ```bash
-touch db/classics/index.cds
+DEBUG=build cds build --for hana
 ```
 
-Now we need to actually go to the CAP server, stop it (with Ctrl-C) and restart it, specifying this new "classics" name as a profile:
-
-```bash
-cds w --profile classics
-```
-
-Lo and behold, the initial data in the CSV files in `db/classics/data/` is now loaded!
+This produces a lot of log output, a lot of which has been omitted here for brevity:
 
 ```log
-  > init from db/classics/data/sap.capire.bookshop-Genres.csv
-  > init from db/classics/data/sap.capire.bookshop-Books_texts.csv
-  > init from db/classics/data/sap.capire.bookshop-Books.csv
-  > init from db/classics/data/sap.capire.bookshop-Authors.csv
+[cli] - determining build tasks for project [/work/scratch/myproj].
+...
+[cli] - model: db/schema.cds, srv/admin-service.cds, srv/cat-service.cds, srv/ex01-service.cds, app/common.cds, app/services.cds, services.cds, node_modules/@sap/cds/srv/outbox.cds
+[cli] - compile.to.hana returned
+done > wrote output to:
+   gen/db/package.json
+   gen/db/src/gen/.hdiconfig
+   ...
+   gen/db/src/gen/AdminService.Authors.hdbview
+   gen/db/src/gen/AdminService.Books.hdbview
+   ...
+   gen/db/src/gen/CatalogService.Books.hdbview
+   gen/db/src/gen/CatalogService.Books_texts.hdbview
+   ...
+   gen/db/src/gen/data/sap.capire.bookshop-Authors.csv
+   gen/db/src/gen/data/sap.capire.bookshop-Authors.hdbtabledata
+   ...
+   gen/db/src/gen/sap.capire.bookshop.Authors.hdbtable
+   gen/db/src/gen/sap.capire.bookshop.Books.hdbtable
+   ...
+
+build completed in 411 ms
 ```
 
-### Add a second initial data collection
-
-To illustrate this technique more fully, let's add a second initial data collection in a similar way. There are a couple of CSV data files for the author Douglas Adams and the books in his (increasingly inaccurately named) [Hitchhiker's Guide To The Galaxy] trilogy.
-
-Create a new "hitchhikers" directory and copy them in from this workshop repository's [attic/] directory, like this:
+There are some data files included ... but we can see that the ones from `test/data/` are _not_:
 
 ```bash
-mkdir -p db/hitchhikers/data/ \
-  && cp ../exercises/01/assets/data/json/* $_ \
-  && touch db/hitchhikers/index.cds
+; DEBUG=build cds build --for hana | grep -E '\/data\/'
+   gen/db/src/gen/data/sap.capire.bookshop-Authors.csv
+   gen/db/src/gen/data/sap.capire.bookshop-Authors.hdbtabledata
+   gen/db/src/gen/data/sap.capire.bookshop-Books.csv
+   gen/db/src/gen/data/sap.capire.bookshop-Books.hdbtabledata
+   gen/db/src/gen/data/sap.capire.bookshop-Books_texts.csv
+   gen/db/src/gen/data/sap.capire.bookshop-Books_texts.hdbtabledata
+   gen/db/src/gen/data/sap.capire.bookshop-Genres.csv
+   gen/db/src/gen/data/sap.capire.bookshop-Genres.hdbtabledata
 ```
 
-> Note that this time, just to illustrate the possibility, the data files are JSON not CSV. This works too, but JSON files are only supported in development mode.
+Excellent!
 
-Add this to the effective configuration with a new section in `package.json#cds.requires` similar to the previous one, so that the entire `cds` stanza looks like this:
+--- Questions
+If you finish earlier than your fellow participants, you might like to ponder these questions. There isn't always a single correct answer and there are no prizes - they're just to give you something else to think about.
 
-```json
-  "cds": {
-    "requires": {
-      "db": {
-        "kind": "sqlite",
-        "credentials": {
-          "url": ":memory:"
-        }
-      },
-      "[classics]": {
-        "initdata": {
-          "model": "db/classics/"
-        }
-      },
-      "[hitchhikers]": {
-        "initdata": {
-          "model": "db/hitchhikers/"
-        }
-      }
-    }
-  }
-```
-
-Now you can restart the CAP server using the "hitchhikers" profile:
-
-```bash
-cds w --profile hitchhikers
-```
-
-and enjoy a different initial data set:
-
-```log
-  > init from db/hitchhikers/data/sap.capire.bookshop-Books.json
-  > init from db/hitchhikers/data/sap.capire.bookshop-Authors.json
-```
-
-Naturally this also works the same way when deploying, for example:
-
-```bash
-cds deploy --to sqlite:hitchhikers.db --profile hitchhikers
-```
-
-which results in:
-
-```log
-  > init from db/hitchhikers/data/sap.capire.bookshop-Books.json
-  > init from db/hitchhikers/data/sap.capire.bookshop-Authors.json
-/> successfully deployed to hitchhikers.db
-```
-
-### Combine the features
-
-You can combine this feature with the ability to configure file based persistence in `cds.requires` too. Try this:
-
-```json
-      "[hitchhikers]": {
-        "initdata": {
-          "model": "db/hitchhikers/"
-        },
-        "db": {
-          "kind": "sqlite",
-          "credentials": {
-            "url": "hitchhikers.db"
-          }
-        }
-      }
-```
-
-Having that `db` entry within the `[hitchhikers]` profile entry will override the "profile-independent" values (whether they're implicit or explicit) when the "hitchhikers" profile is specified via the `--profile` option on relevant `cds` commands.
-
-Feel free to explore this combination if you have time!
-
-## Understand the difference between sample and initial data
-
-Until now we've been managing and using initial data. There's also support for using _sample_ data locally. Briefly, sample data is exclusively for tests and demos, in other words for local development only, not for production.
-
-The CAP server will look for and load sample data from `data/` directories inside a project root based `test/` directory parent.
-
-To wrap up this exercise, let's explore.
-
-First, we should stop the CAP server (with Ctrl-C), then restart it in "watch" mode but without a specific profile:
-
-```bash
-cds w
-```
-
-Next, let's create a symbolic link that will look like this:
-
-```text
-+----------+      +----------------------+
-| db/data/ |----->| db/hitchhikers/data/ |
-+----------+      +----------------------+
-```
-
-so that we can treat the "hitchhikers" data set as the default initial data and run without an explicit profile for now:
-
-```bash
-cd db \
-  && ln -s hitchhikers/data . \
-  && cd -
-```
-
-When the CAP server restarts it should show the "init from ..." log lines taking data from these "hitchhikers" JSON files.
-
-Now add some sample data in a new directory `test/data/`, thus:
-
-```bash
-mkdir -p test/data/ \
-  && cp ../exercises/01/assets/test/data/csv/* $_
-```
-
-As soon as you do this, on restarting, the CAP server will emit these log lines:
-
-```log
-  > init from test/data/sap.capire.bookshop-Books.csv
-  > init from db/hitchhikers/data/sap.capire.bookshop-Books.json
-  > init from db/hitchhikers/data/sap.capire.bookshop-Authors.json
-```
-
-showing that initial and sample data has been loaded.
-
-However, as the Capire documentation on how to [provide initial data] points out, `test/data/` based sample data is for tests and demos only, and not for production.
-
-<!-- TODO: SHOW CDS BUILD EXAMPLE -->
-
+1. What was the reason for using a file specifically called `services.cds` when you extended the `Ex01Service` with a new `Sales` entity?
 
 ---
 
@@ -595,10 +561,7 @@ The development profile is the default; with `cds env requires.db --profile prod
 undefined
 ```
 
-<a name="footnote-6"></a>
-### Footnote 6
-
-The name can also be `csv/` which is also "special".
+See the next exercise for more on profiles.
 
 [productive use]: https://cap.cloud.sap/docs/guides/databases-sqlite#sqlite-in-production
 [command line shell for SQLite]: https://sqlite.org/cli.html
@@ -611,7 +574,5 @@ The name can also be `csv/` which is also "special".
 [The Art and Science of CAP]: https://qmacro.org/blog/posts/2024/12/06/the-art-and-science-of-cap/
 [in Episode 8]: https://qmacro.org/blog/posts/2025/02/14/tasc-notes-part-8/#exploring-in-sqlite
 [DDL]: https://cap.cloud.sap/docs/guides/databases#rules-for-generated-ddl
-[profile]: https://cap.cloud.sap/docs/node.js/cds-env#profiles
 [cds env]: https://cap.cloud.sap/docs/tools/cds-cli#cds-env
-[Hitchhiker's Guide To The Galaxy]: https://en.wikipedia.org/wiki/The_Hitchhiker%27s_Guide_to_the_Galaxy
-[attic/]: https://github.com/SAP-samples/cap-local-development-workshop/tree/main/attic
+[build]: https://cap.cloud.sap/docs/guides/deployment/custom-builds#build-task-properties

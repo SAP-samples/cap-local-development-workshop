@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+declare projname=myproj
+
+main() {
+
+  read -r -p "Hit <Enter> to clean out $projname and start setup ..."
+
+  rm -rf $projname
+
+  # Unpack from tarball if there is one
+  if [[ -f "$projname.tgz" ]]; then
+    tar xzf "$projname.tgz"
+  else
+    echo \
+      cds init --add sample $projname \
+      && cd "$_" \
+      && npm install
+  fi
+
+  echo "👉 Now 'cd $projname/ && cds watch'"
+
+}
+
+main "$@"
