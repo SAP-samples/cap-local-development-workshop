@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+removeTestDir() {
+  rm -rf test/
+}
+
+addCredentialsUrlInMemory() {
+  local tempfile
+  tempfile="$(mktemp)"
+  cp package.json "$tempfile" \
+    && jq '.cds.requires.db += { credentials: { url: ":memory:" } }' "$tempfile" > package.json \
+    && rm "$tempfile"
+}
+
+deploy() {
+  cds deploy
+}
+
+moveDataToClassics() {
+  mkdir db/classics/ \
+    && mv db/data/ db/classics/
+}
+
+addClassicsConfig() {
+  local tempfile
+  tempfile="$(mktemp)"
+  cp package.json "$tempfile" \
+    && jq '.cds.requires += { "[classics]": { initdata: { model: "db/classics/" } } }' "$tempfile" > package.json \
+    && rm "$tempfile"
+}
+
+touchDbClassicsIndex() {
+  touch db/classics/index.cds
+}
+
+createHitchhikersDataCollection() {
+  mkdir -p db/hitchhikers/data/ \
+    && cp ../exercises/02/assets/data/json/* "$_" \
+    && touch db/hitchhikers/index.cds
+}
+
+addHitchhikersConfig() {
+  local tempfile
+  tempfile="$(mktemp)"
+  cp package.json "$tempfile" \
+    && jq '.cds.requires += { "[hitchhikers]": { initdata: { model: "db/hitchhikers/" } } }' "$tempfile" > package.json \
+    && rm "$tempfile"
+}
+
+deployToHitchhikersDbFile() {
+  cds deploy --to sqlite:hitchhikers.db --profile hitchhikers
+}
+
+addSqliteInfoToHitchhikersConfig() {
+  local tempfile
+  tempfile="$(mktemp)"
+  cp package.json "$tempfile" \
+    && jq '.cds.requires["[hitchhikers]"] += { db: { kind: "sqlite", credentials: { url: "hitchhikers.db" } } }' "$tempfile" > package.json \
+    && rm "$tempfile"
+}
+
+main() {
+
+  removeTestDir
+  deploy
+  addCredentialsUrlInMemory
+  moveDataToClassics
+  addClassicsConfig
+  touchDbClassicsIndex
+  createHitchhikersDataCollection
+  addHitchhikersConfig
+  deployToHitchhikersDbFile
+
+}
+
+if [[ ! $0 == "-bash" ]]; then
+  main "$@"
+fi
