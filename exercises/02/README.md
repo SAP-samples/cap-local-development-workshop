@@ -4,6 +4,8 @@ The [profile] concept is a great way to organize different collections of config
 
 > Throughout this exercise keep the `cds watch` process running and in its own terminal instance; if necessary, open a second terminal to run any other commands you need, so you've always got the `cds watch` process running and visible.
 
+## Modify the data organization
+
 From the previous exercise, here's what we have. The initial and sample data looks like this:
 
 ```text
@@ -32,7 +34,7 @@ and the `package.json#cds.requires.db` section, reflecting the persistent file `
   }
 ```
 
-## Remove the sample data and switch back to in-memory
+### Remove the sample data and switch back to in-memory
 
 👉 To keep things simple and keep "noise" to a minimum, remove the sample data entirely and re-deploy, as we don't need it any more:
 
@@ -81,11 +83,11 @@ This should cause the CAP server to emit some familiar log lines:
 
 This reminds us that data is being loaded from CSV files in `db/data/`, according to convention.
 
-## Maintain a separate initial data collection
+### Maintain a separate initial data collection
 
 Sometimes it's useful to maintain and use different starting sets of initial data. You can manage this with the combination of convention (the mechanism looks for `data/` directories directly within the `db/`, `srv/` and `app/` directories and any other referenced locations) and the [profile] concept. Let's try this out.
 
-OK. The name of the `data/` directory is special (see [footnote-6](#footnote-6)), and its relative location is also special; if we move it to somewhere else, the files containing the initial data won't get picked up automatically.
+OK. The name of the `data/` directory is special (see [footnote-1](#footnote-1)), and its relative location is also special; if we move it to somewhere else, the files containing the initial data won't get picked up automatically.
 
 👉 Let's try that now:
 
@@ -266,6 +268,16 @@ Feel free to explore this combination if you have time!
 
 <!-- TODO: use cds REPL to dig into the data, using some of the https://cap.cloud.sap/docs/guides/databases-sqlite#path-expressions-filters features -->
 
+## Use the cds REPL to explore path expression features with SQLite
+
+Using SQLite for local development doesn't mean sacrificing database features. The new database services, including the one for SQLite, offer a common set of [features] including all kinds of [path expressions & filters]. This is a good opportunity to try some of these out, directly, interactively, with the [cds REPL].
+
+Before we continue, we need to add the [@cap-js/cds-test] package, which will make it easy for us to have the REPL start CAP servers for us. Add it now as a local development dependency:
+
+```bash
+npm add -D @cap-js/cds-test
+```
+
 ---
 
 ## Footnotes
@@ -273,72 +285,14 @@ Feel free to explore this combination if you have time!
 <a name="footnote-1"></a>
 ### Footnote 1
 
-They are already exposed but only in the `AdminService` which is annotated to protect it, with:
-
-```cds
-service AdminService @(requires:'admin') { ... }
-```
-
-(in `srv/admin-service.cds`). Yes, we can embrace the mock authentication:
-
-```bash
-curl -s -u 'alice:' localhost:4004/odata/v4/admin/Books
-```
-
-But to be honest there's another reason, which is that they're also annotated (in `app/admin-books/fiori-service.cds`) as being draft-enabled:
-
-```cds
-annotate sap.capire.bookshop.Books with @fiori.draft.enabled;
-```
-
-This adds a second key (`isActiveEntity`) to the entity, and we don't want to get into that at this early stage.
-
-<a name="footnote-2"></a>
-### Footnote 2
-
-Note the `--in-memory?` option in the expanded version of `cds w` which is `cds serve all --with-mocks --in-memory?`. The meaning of the question mark is important here - this is what the help says for the option:
-
-```text
-    Automatically adds a transient in-memory database bootstrapped on
-    each (re-)start in the same way cds deploy would do, based on defaults
-    or configuration in package.json#cds.requires.db. Add a question
-    mark to apply a more defensive variant which respects the configured
-    database, if any, and only adds an in-memory database if no
-    persistent one is configured.
-```
-
-<a name="footnote-3"></a>
-### Footnote 3
-
-There is [no particular strict convention for SQLite database filename extensions]; choosing `.db` or `.sqlite` are decent choices though.
-
-<a name="footnote-4"></a>
-### Footnote 4
-
-An example of a one-shot command, i.e. a single `sqlite3` invocation at the shell prompt, is:
-
-```bash
-sqlite3 db.sqlite 'select count(*) from sap_capire_bookshop_Authors'
-```
-
-<a name="footnote-5"></a>
-### Footnote 5
-
-The development profile is the default; with `cds env requires.db --profile production` we get:
-
-```text
-undefined
-```
-
-<a name="footnote-6"></a>
-### Footnote 6
-
 The name can also be `csv/` which is also "special".
 
-[provide initial data]: https://cap.cloud.sap/docs/guides/databases#providing-initial-data
-[no particular strict convention for SQLite database filename extensions]: https://stackoverflow.com/questions/808499/does-it-matter-what-extension-is-used-for-sqlite-database-files
 [profile]: https://cap.cloud.sap/docs/node.js/cds-env#profiles
 [Hitchhiker's Guide To The Galaxy]: https://en.wikipedia.org/wiki/The_Hitchhiker%27s_Guide_to_the_Galaxy
 [Deploy to a persistent file]: ../01/README.md#deploy-to-a-persistent-file
 [assets/]: assets/
 [CDL]: https://cap.cloud.sap/docs/cds/cdl
+[features]: https://cap.cloud.sap/docs/guides/databases-sqlite#features
+[path expressions & filters]: https://cap.cloud.sap/docs/guides/databases-sqlite#path-expressions-filters
+[cds REPL]: https://cap.cloud.sap/docs/tools/cds-cli#cds-repl
+[@cap-js/cds-test]: https://github.com/cap-js/cds-test
