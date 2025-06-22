@@ -61,6 +61,10 @@ addSqliteInfoToHitchhikersConfig() {
     && rm "$tempfile"
 }
 
+addCdsTestPackage() {
+  npm add -D @cap-js/cds-test
+}
+
 main() {
 
   removeTestDir
@@ -72,6 +76,7 @@ main() {
   createHitchhikersDataCollection
   addHitchhikersConfig
   deployToHitchhikersDbFile
+  addCdsTestPackage
 
 }
 

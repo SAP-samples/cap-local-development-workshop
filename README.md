@@ -29,3 +29,4 @@ Each of the following exercises touches on one or more of the topic areas above.
 
 - [00 - Setting up and getting to cds watch](exercises/00/)
 - [01 - cds watch, SQLite, initial data and sample data](exercises/01/)
+- [02 - configuration profiles, more on initial data, and the cds REPL](exercises/02/)

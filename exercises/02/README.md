@@ -278,7 +278,207 @@ Before we continue, we need to add the [@cap-js/cds-test] package, which will ma
 npm add -D @cap-js/cds-test
 ```
 
+👉 Start up the REPL in its basic form, specifying the "classics" profile (so the initial data in `db/classics/data/` is loaded):
+
+```bash
+cds repl --profile classics
+```
+
+This should present a simple prompt that looks like this:
+
+```text
+Welcome to cds repl v 9.0.4
+>
+```
+
+👉 At the prompt, ask for help with `.help`, which should show:
+
+```log
+.break     Sometimes you get stuck, this gets you out
+.clear     Alias for .break
+.editor    Enter editor mode
+.exit      Exit the REPL
+.help      Print this help message
+.inspect   Sets options for util.inspect, e.g. `.inspect .depth=1`.
+.load      Load JS from a file into the REPL session
+.run       Runs a cds server from a given CAP project folder, or module name like @capire/bookshop.
+.save      Save all evaluated commands in this REPL session to a file
+
+Press Ctrl+C to abort current expression, Ctrl+D to exit the REPL
+```
+
+👉 Get a taste of what's possible and available by using the cds specific command `.inspect` to look at the entire CDS facade at a high level, noting that much of it is [lazily loaded]:
+
+```text
+.inspect cds .depth=0
+```
+
+This should show the current top level properties of the facade, like this:
+
+```log
+cds: cds_facade {
+  _events: [Object: null prototype],
+  _eventsCount: 2,
+  _maxListeners: undefined,
+  model: undefined,
+  db: undefined,
+  cli: [Object],
+  root: '/work/scratch/myproj',
+  services: {},
+  extend: [Function (anonymous)],
+  version: '9.0.4',
+  builtin: [Object],
+  service: [Function],
+  log: [Function],
+  parse: [Function],
+  home: '/work/scratch/myproj/node_modules/@sap/cds',
+  env: [Config],
+  requires: {},
+  Symbol(shapeMode): false,
+  Symbol(kCapture): false
+}
+```
+
+Certain properties in the facade such as `model` and `db` are still `undefined`, because there is no model loaded, no CAP server running and providing services.
+
+👉 Let's change that situation now, and use the `.run` command to comfortably start a CAP server in the context of the REPL, for the current project (pointed to by the `.` symbol, the normal representation for "current directory"):
+
+```text
+.run .
+```
+
+> You can also use the `--run` option when you invoke `cds repl` to have a CAP server started up in the REPL context immediately.
+
+This should emit the usual CAP server startup log lines, plus something like this:
+
+```log
+Following variables are made available in your repl's global context:
+
+from cds.entities: {
+  Books,
+  Authors,
+  Genres,
+}
+
+from cds.services: {
+  db,
+  AdminService,
+  CatalogService,
+  Ex01Service,
+}
+
+Simply type e.g. Ex01Service in the prompt to use the respective objects.
+```
+
+We [defined our `Ex01Service` in the simplest way], but we can see in the REPL that there are already plenty of handlers attached.
+
+👉 Have a look at them with `.inspect Ex01Service.handlers`:
+
+```text
+.inspect Ex01Service.handlers
+```
+
+This should show handlers, grouped by phase, for the service; it's the ones in the `on` phase that provide the built-in handling for CRUD operations:
+
+```text
+Ex01Service.handlers: EventHandlers {
+  _initial: [
+    {
+      before: '*',
+      handler: [Function: check_service_level_restrictions]
+    },
+    { before: '*', handler: [Function: check_auth_privileges] },
+    { before: '*', handler: [Function: check_readonly] },
+    { before: '*', handler: [Function: check_insertonly] },
+    { before: '*', handler: [Function: check_odata_constraints] },
+    { before: '*', handler: [Function: check_autoexposed] },
+    { before: '*', handler: [AsyncFunction: enforce_auth] },
+    { before: 'READ', handler: [Function: restrict_expand] },
+    { before: 'CREATE', handler: [AsyncFunction: validate_input] },
+    { before: 'UPDATE', handler: [AsyncFunction: validate_input] },
+    { before: 'NEW', handler: [AsyncFunction: validate_input] },
+    { before: 'READ', handler: [Function: handle_paging] },
+    { before: 'READ', handler: [Function: handle_sorting] }
+  ],
+  before: [],
+  on: [
+    { on: 'CREATE', handler: [AsyncFunction: handle_crud_requests] },
+    { on: 'READ', handler: [AsyncFunction: handle_crud_requests] },
+    { on: 'UPDATE', handler: [AsyncFunction: handle_crud_requests] },
+    { on: 'DELETE', handler: [AsyncFunction: handle_crud_requests] },
+    { on: 'UPSERT', handler: [AsyncFunction: handle_crud_requests] }
+  ],
+  after: [],
+  _error: []
+}
+```
+
+Now it's time to try one of those [CQL] path expressions with infix filters that are supported by all the new database services (including SQLite, HANA and Postgres).
+
+At the REPL prompt, declare a query like this:
+
+```text
+yorkshireBooks = SELECT `from ${Books}:author[placeOfBirth like '%Yorkshire%'] {placeOfBirth, books.title as book, name as author }`
+```
+
+This should emit the query object that results:
+
+```text
+cds.ql {
+  SELECT: {
+    from: {
+      ref: [
+        'sap.capire.bookshop.Books',
+        {
+          id: 'author',
+          where: [
+            { ref: [ 'placeOfBirth' ] },
+            'like',
+            { val: '%Yorkshire%' }
+          ]
+        }
+      ]
+    },
+    columns: [
+      { ref: [ 'placeOfBirth' ] },
+      { ref: [ 'books', 'title' ], as: 'book' },
+      { ref: [ 'name' ], as: 'author' }
+    ]
+  }
+}
+```
+
+As well as [stare at] it for a bit, we can also execute it (technically: send it to the default database service). Do that now:
+
+```text
+await yorkshireBooks
+```
+
+It should return the books from the two Brontë sisters:
+
+```text
+[
+  {
+    placeOfBirth: 'Thornton, Yorkshire',
+    book: 'Wuthering Heights',
+    author: 'Emily Brontë'
+  },
+  {
+    placeOfBirth: 'Thornton, Yorkshire',
+    book: 'Jane Eyre',
+    author: 'Charlotte Brontë'
+  }
+]
+```
+
+There's plenty more to explore - see the links in the [Further reading](#further-reading) section below.
+
 ---
+
+## Further reading
+
+- [Level up your CAP skills by learning how to use the cds REPL](https://qmacro.org/blog/posts/2025/03/21/level-up-your-cap-skills-by-learning-how-to-use-the-cds-repl/)
+- [The Art and Science of CAP](https://qmacro.org/blog/posts/2024/12/06/the-art-and-science-of-cap/)
 
 ## Footnotes
 
@@ -296,3 +496,7 @@ The name can also be `csv/` which is also "special".
 [path expressions & filters]: https://cap.cloud.sap/docs/guides/databases-sqlite#path-expressions-filters
 [cds REPL]: https://cap.cloud.sap/docs/tools/cds-cli#cds-repl
 [@cap-js/cds-test]: https://github.com/cap-js/cds-test
+[lazily loaded]: https://qmacro.org/blog/posts/2024/12/10/tasc-notes-part-4/#lazy-loading-of-the-cds-facades-many-features
+[defined our `Ex01Service` in the simplest way]: ../01/README.md#add-a-new-service-definition
+[CQL]: https://cap.cloud.sap/docs/cds/cql
+[stare at]: https://qmacro.org/blog/posts/2017/02/19/the-beauty-of-recursion-and-list-machinery/#initial-recognition
