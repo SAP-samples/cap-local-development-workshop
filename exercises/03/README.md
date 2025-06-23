@@ -1,4 +1,4 @@
-# Exercise 03 - mocking authentication and required services
+# Exercise 03 - mocking auth and required services
 
 There's no avoiding the fact that if you want your CAP apps and services to be useful, they're going to have to make use of authentication mechanisms, and consume other APIs, in the cloud. In local development mode, however, these requirements can get in the way and hinder progress.
 
@@ -101,6 +101,8 @@ with some extra info in the CAP server log output too:
 > 401|The request lacked valid authentication credentials|Can't verify who you are
 > 403|The request did contain valid credentials (i.e. was properly authenticated) but the authenticated user does not have the requisite permissions|Your identify is verified but you don't have access
 
+#### Make a request authenticated as a user with the requisite role
+
 👉 Repeat the same resource request but this time as user "alice", who does have the "admin" role:
 
 ```bash
@@ -124,6 +126,185 @@ and here's what's returned:
 "Eleonora"
 "Catweazle"
 ```
+
+### Look at @requires and @restrict annotations with the Ex01Service
+
+In a previous exercise we [added a new service definition]; now we'll add some annotations to that to get a feel for how they work, and how the mocked strategy supports exactly what would be supported in production.
+
+#### Set up restrictions
+
+👉 Add annotation declarations to the `srv/ex01-service.cds` file so the entire content ends up looking like this:
+
+```cds
+using { sap.capire.bookshop as my } from '../db/schema';
+@path: '/ex01' service Ex01Service {
+  entity Books as projection on my.Books;
+}
+
+annotate Ex01Service with @requires: 'authenticated-user';
+annotate Ex01Service.Books with @restrict: [
+  { grant: 'READ' },
+  { grant: 'WRITE', to: 'backoffice' }
+]);
+```
+
+This sets up:
+
+- a requirement for any request to be authenticated (i.e. made with a verified identity)
+- a restriction on the `Books` entity in that any authenticated user can perform read operations, but only users with the "backoffice" role can perform write operations
+
+#### Make an unauthenticated request
+
+👉 Try to retrieve the details of the book with ID 207 ("Jane Eyre") without providing any authentication details:
+
+```bash
+curl -i -s localhost:4004/ex01/Books/207
+```
+
+As expected, we don't get very far with this:
+
+```log
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Basic realm="Users"
+
+Unauthorized
+```
+
+#### Make authenticated requests with an administrative user
+
+👉 Try that again, authenticating as the pre-defined administrative user "alice":
+
+```bash
+curl -i -s -u 'alice:' localhost:4004/ex01/Books/207
+```
+
+The conditions of the (rather general) `READ` grant, combined with the `authenticated-user` requirement, are both fulfilled, meaning success for Alice:
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+{"@odata.context":"$metadata#Books/$entity","createdAt":"2025-06-23T13:26:48.247Z","createdBy":"anonymous","modifiedAt":"2025-06-23T13:26:48.247Z","modifiedBy":"anonymous","ID":207,"title":"Jane Eyre","descr":"..."}
+```
+
+But can Alice perform operations with the `WRITE` semantic?
+
+👉 Try it:
+
+```bash
+curl -X DELETE -i -s -u 'alice:' localhost:4004/ex01/Books/207
+```
+
+No!
+
+```log
+HTTP/1.1 403 Forbidden
+
+{"error":{"message":"Forbidden","code":"403","@Common.numericSeverity":4}}
+```
+
+#### Define a new office user
+
+While there are pre-defined users we can make use of in the mocked authentication strategy, we can define our own too, which is especially helpful when we're iterating locally on building out the domain model and including the security considerations with that.
+
+We could put this configuration in `package.json#cds` but for a change, let's use a [project-local .cdsrc.json] file.
+
+👉 Create a `.cdsrc.json` file in the project root, with this content for Milton, the [stapler guy]:
+
+```json
+{
+  "requires": {
+    "auth": {
+      "users": {
+        "milton": {
+          "password": "dontmovemydesk",
+          "roles": [
+            "stapler"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+Once this is saved, the CAP server will restart.
+
+Just for interest, check the effective environment, specifically for the auth details:
+
+```bash
+cds env requires.auth
+```
+
+This should emit:
+
+```log
+{
+  restrict_all_services: false,
+  kind: 'mocked',
+  users: {
+    alice: { tenant: 't1', roles: [ 'admin' ] },
+    bob: { tenant: 't1', roles: [ 'cds.ExtensionDeveloper' ] },
+    carol: { tenant: 't1', roles: [ 'admin', 'cds.ExtensionDeveloper' ] },
+    dave: { tenant: 't1', roles: [ 'admin' ], features: [] },
+    erin: { tenant: 't2', roles: [ 'admin', 'cds.ExtensionDeveloper' ] },
+    fred: { tenant: 't2', features: [ 'isbn' ] },
+    me: { tenant: 't1', features: [ '*' ] },
+    yves: { roles: [ 'internal-user' ] },
+    '*': true,
+    milton: { password: 'dontmovemydesk', roles: [ 'stapler' ] }
+  },
+  tenants: { t1: { features: [ 'isbn' ] }, t2: { features: '*' } }
+}
+```
+
+Alongside the pre-defined users we can see Milton.
+
+> Adding the `--profile classics` option here is also possible, but the end result is the same in this case.
+
+#### Authenticate a request with the new office user
+
+👉 Let's try this new user, like this:
+
+```bash
+curl -X DELETE -i -s -u 'milton:dontmovemydesk' localhost:4004/ex01/Books/207
+```
+
+Not quite!
+
+```log
+HTTP/1.1 403 Forbidden
+
+{"error":{"message":"Forbidden","code":"403","@Common.numericSeverity":4}}
+```
+
+Of course, we need to give him the "backoffice" role.
+
+👉 Do that now by adding it to the `[ ... ]` list of roles in `.cdsrc.json` so that it looks like this:
+
+```json
+"roles": [
+  "stapler",
+  "backoffice"
+]
+```
+
+Now try again:
+
+```bash
+curl -X DELETE -i -s -u 'milton:dontmovemydesk' localhost:4004/ex01/Books/207
+```
+
+Success!
+
+```log
+HTTP/1.1 204 No Content
+```
+
+This just scratches the surface of what's possible; remember that the power of all of the abstracted authentication and authorisation layers (including users) is available to all authentication strategies, even (or "especially") the ones designed for local development. And there's no change when one moves to production, at that level.
+
+See the [Further reading](#further-reading) section for more information.
+
 
 ---
 
@@ -158,3 +339,6 @@ If you finish earlier than your fellow participants, you might like to ponder th
 [authentication is a prerequisite]: https://cap.cloud.sap/docs/guides/security/authorization#prerequisite-authentication
 [401]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/401
 [403]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/403
+[added a new service definition]: ../01/README.md#add-a-new-service-definition
+[project-local .cdsrc.json]: https://cap.cloud.sap/docs/node.js/cds-env#in-cdsrc-json
+
