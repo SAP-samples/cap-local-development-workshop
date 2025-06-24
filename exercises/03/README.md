@@ -320,12 +320,405 @@ This just scratches the surface of what's possible; remember that the power of a
 
 See the [Further reading](#further-reading) section for more information.
 
+## Mock an external service
+
+Working locally doesn't mean that we need to avoid development that involves remote services. A remote service API definition can be downloaded and imported, so that it becomes known to the CAP server (as a "required" service, rather than a "provided" service), and via the translation of the API definition to an internal model representation in Core Schema Notation [CSN] it can also be given active behavior and even test data.
+
+Everyone loves Northwind (don't they?) so let's use a cut-down version of Northwind, called Northbreeze, which is available at <https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze>.
+
+### Import the API definition
+
+The Northbreeze service is an OData v4 service and the API definition for that is essentially the EDMX available in the service's metadata document.
+
+👉 Retrieve the metadata document resource and store the representation in a file:
+
+```bash
+curl -s \
+  --url 'https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze/$metadata' \
+  > northbreeze.edmx
+```
+
+👉 Now use the `cds import` command to import the API definition (in its EDMX form) and convert it to CSN:
+
+```bash
+cds import northbreeze.edmx
+```
+
+You should see something like this:
+
+```log
+[cds] - imported API to srv/external/northbreeze
+> use it in your CDS models through the like of:
+
+using { northbreeze as external } from './external/northbreeze'
+```
+
+👉 Let's have a look at where the imported CSN is, in relation to other content in `srv/`:
+
+```bash
+tree srv
+```
+
+We can see that the default location that `cds import` uses makes a lot of sense, in that it's a service, but not part of our own overall CDS model:
+
+```log
+srv
+├── admin-service.cds
+├── admin-service.js
+├── cat-service.cds
+├── cat-service.js
+├── ex01-service.cds
+└── external
+    ├── northbreeze.csn
+    └── northbreeze.edmx
+```
+
+Moreover, a reference to this as a "required" service has been added to the `package.json#cds` based configuration, which we can perhaps better observe by looking at the effective `requires` configuration.
+
+👉 Do that now:
+
+```bash
+cds env requires
+```
+
+As well as the sections for `middlewares`, `queue`, `auth` and `db` (which have been reduced for brevity), we now have `northbreeze` listed, an "external" "OData" resource whose "model" is known and which is "implemented" by a built-in remote service module:
+
+```log
+{
+  middlewares: true,
+  queue: {
+    model: '@sap/cds/srv/outbox',
+    ...
+    kind: 'persistent-queue'
+  },
+  auth: {
+    restrict_all_services: false,
+    kind: 'mocked',
+    users: {
+      alice: { tenant: 't1', roles: [ 'admin' ] },
+      ...
+      milton: {
+        password: 'dontmovemydesk',
+        roles: [ 'stapler', 'backoffice' ]
+      }
+    },
+    tenants: { t1: { features: [ 'isbn' ] }, t2: { features: '*' } }
+  },
+  db: {
+    impl: '@cap-js/sqlite',
+    credentials: { url: ':memory:' },
+    kind: 'sqlite'
+  },
+  northbreeze: {
+    impl: '@sap/cds/libx/_runtime/remote/Service.js',
+    external: true,
+    kind: 'odata',
+    model: 'srv/external/northbreeze'
+  }
+}
+```
+
+### Have the service mocked
+
+👉 Start mocking this service:
+
+```bash
+cds mock northbreeze --port 5005
+```
+
+> Normally, without the `--port` option, a random port will be chosen, but for the sake of this workshop and consistency of instructions, we'll use a specific port.
+
+This will start a CAP server just for this service:
+
+```log
+...
+[cds] - connect using bindings from: { registry: '~/.cds-services.json' }
+...
+[cds] - mocking northbreeze {
+  impl: 'node_modules/@sap/cds/libx/_runtime/common/Service.js',
+  path: '/odata/v4/northbreeze'
+}
+[cds] - server listening on { url: 'http://localhost:5005' }
+...
+```
+
+But there's no data right now, as illustrated with simple request like this:
+
+```bash
+; curl 'localhost:5005/odata/v4/northbreeze/Suppliers/$count'
+0
+```
+
+### Add some data
+
+The sensible place to put data is "next to" the model definition, which means here, in this case:
+
+```text
+srv/
+├── admin-service.cds
+├── admin-service.js
+├── cat-service.cds
+├── cat-service.js
+├── ex01-service.cds
+└── external
+    ├── data
+    │   └── [data files go here]
+    ├── northbreeze.csn
+    └── northbreeze.edmx
+```
+
+#### Use generated data
+
+👉 So, after stopping the server, create a `data/` directory in `srv/external/`, and then use the "data" facet with `cds add` to generate a few records of mock data for the `Suppliers` entity:
+
+```bash
+mkdir srv/external/data/ \
+  && cds add data \
+    --filter Suppliers \
+    --records 5 \
+    --out srv/external/data/
+```
+
+This results in:
+
+```log
+adding data
+  creating srv/external/data/northbreeze.Suppliers.csv
+
+successfully added features to your project
+```
+
+👉 That data is pretty useful already - check with:
+
+```bash
+curl -s localhost:5005/odata/v4/northbreeze/Suppliers | jq .value
+```
+
+which should show output similar to this (massively reduced here for brevity):
+
+```json
+[
+  {
+    "SupplierID": 3865327,
+    "CompanyName": "CompanyName-3865327",
+    "ContactName": "ContactName-3865327",
+    "ContactTitle": "ContactTitle-3865327",
+    "Address": "Address-3865327",
+    "City": "City-3865327",
+    "Region": "Region-3865327",
+    "PostalCode": "PostalCode-3865327",
+    "Country": "Country-3865327",
+    "Phone": "Phone-3865327",
+    "Fax": "Fax-3865327",
+    "HomePage": "HomePage-3865327"
+  },
+  {
+    "SupplierID": 3865328,
+    "CompanyName": "...",
+  }
+]
+```
+
+#### Retrieve, store and use data from the real service
+
+But we can do better. Why not grab and store some "real" data from the actual service, and use it when we mock?
+
+👉 First, remove the CSV file we just generated:
+
+```bash
+rm srv/external/data/northbreeze-Suppliers.csv
+```
+
+👉 Now retrieve the entitysets and put the data into files in that `srv/external/data/` directory:
+
+```bash
+for entity in Products Suppliers Categories; do
+  echo -n "$entity: "
+  curl \
+    --silent \
+    --url "https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze/$entity" \
+    | jq .value \
+    | tee "srv/external/data/northbreeze-$entity.json" \
+    | jq length
+done
+```
+
+This should result in the retrieval of a number of records for each entityset:
+
+```log
+Products: 77
+Suppliers: 29
+Categories: 8
+```
+
+and the creation of the corresponding files, this time in JSON format:
+
+```
+srv/
+├── admin-service.cds
+├── admin-service.js
+├── cat-service.cds
+├── cat-service.js
+├── ex01-service.cds
+└── external
+    ├── data
+    │   ├── northbreeze-Categories.json
+    │   ├── northbreeze-Products.json
+    │   └── northbreeze-Suppliers.json
+    ├── northbreeze.csn
+    └── northbreeze.edmx
+```
+
+👉 Now restart the mock service:
+
+```bash
+cds mock northbreeze --port 5005
+```
+
+👉 and re-request the same entityset:
+
+```bash
+curl -s localhost:5005/odata/v4/northbreeze/Suppliers | jq .value
+```
+
+This time, the data is more realistic, as it's the actual data we fetched from the real service (again, heavily reduced here for brevity):
+
+```json
+[
+  {
+    "SupplierID": 1,
+    "CompanyName": "Exotic Liquids",
+    "ContactName": "Charlotte Cooper",
+    "ContactTitle": "Purchasing Manager",
+    "Address": "49 Gilbert St.",
+    "City": "London",
+    "Region": "NULL",
+    "PostalCode": "EC1 4SD",
+    "Country": "UK",
+    "Phone": "(171) 555-2222",
+    "Fax": "NULL",
+    "HomePage": "NULL"
+  },
+  {
+    "SupplierID": 2,
+    "CompanyName": "..."
+  }
+]
+```
+
+Great! Now we have a fully mocked external service complete with real data.
+
+### Access the mocked remote service from the cds REPL (bonus)
+
+If you have time, you can build on your knowledge of and confidence with the cds REPL by connecting to this mocked remote service from within the cds REPL.
+
+👉 First, let's have a look at the "wiring" for this mocked remote service in our local development mode context; take a peek in the `.cds-services.json` file in your home directory:
+
+```bash
+jq . ~/.cds-services.json
+```
+
+This is a file that the CAP server runtime uses in local development mode to declare and detail which services are (being) provided, and where. It will look something like this (the server IDs are process IDs so will be different for you):
+
+```json
+{
+  "cds": {
+    "provides": {
+      "northbreeze": {
+        "kind": "odata",
+        "credentials": {
+          "url": "http://localhost:5005/odata/v4/northbreeze"
+        },
+        "server": 124021
+      }
+    },
+    "servers": {
+      "124021": {
+        "root": "file:///work/scratch/myproj",
+        "url": "http://localhost:5005"
+      }
+    }
+  }
+}
+```
+
+👉 Now start the cds REPL:
+
+```bash
+cds repl
+```
+
+👉 and in the prompt, [connect to the remote service] and store that connection in a variable:
+
+```text
+nb = await cds.connect.to("northbreeze")
+```
+
+This will emit the internal representation of this connection, which you can get a summary of using the `.inspect` command which you learned about [in a previous exercise], like this:
+
+```bash
+> .inspect nb .depth=0
+nb: RemoteService {
+  name: 'northbreeze',
+  options: [Object],
+  kind: 'odata',
+  model: [LinkedCSN],
+  handlers: [EventHandlers],
+  definition: [service],
+  namespace: 'northbreeze',
+  actions: [LinkedDefinitions],
+  selectProduct: [Function: northbreeze.selectProduct],
+  entities: [LinkedDefinitions],
+  _source: '/work/scratch/myproj/node_modules/@sap/cds/libx/_runtime/remote/Service.js',
+  datasource: undefined,
+  destinationOptions: undefined,
+  destination: [Object],
+  path: undefined,
+  requestTimeout: 60000,
+  csrf: undefined,
+  csrfInBatch: undefined,
+  middlewares: [Object]
+}
+```
+
+👉 Now, still at the cds REPL prompt, construct a query on the fly and send it across the connection to your locally mocked version of the remote Northbreeze service:
+
+```text
+await nb.run(SELECT `CompanyName` .from(`Suppliers`))
+```
+
+> Remember that pretty much everything in this context is going to be asynchronous, i.e. in a Promise wrapper, so `await` is needed here to realise the call.
+
+This results in:
+
+- an actual OData call from the cds REPL context across to the mocked Northbreeze service on port 5005
+- the retrieval of the Suppliers entityset, specifically the `CompanyName` property for each entity
+
+```text
+[
+  { CompanyName: 'Exotic Liquids', SupplierID: 1 },
+  { CompanyName: 'New Orleans Cajun Delights', SupplierID: 2 },
+  { CompanyName: "Grandma Kelly's Homestead", SupplierID: 3 },
+  { CompanyName: 'Tokyo Traders', SupplierID: 4 },
+  { CompanyName: "Cooperativa de Quesos 'Las Cabras'", SupplierID: 5 },
+  { CompanyName: "Mayumi's", SupplierID: 6 },
+  { CompanyName: 'Pavlova Ltd.', SupplierID: 7 },
+  ...
+  { CompanyName: 'Gai pâturage', SupplierID: 28 },
+  { CompanyName: "Forêts d'érables", SupplierID: 29 }
+]
+```
+
+Excellent!
+
 ---
 
 ## Further reading
 
 - The [Authentication] topic in Capire
 - The [CDS-based Authorization] topic in Capire
+- The contents of the [Service integration with SAP Cloud Application Programming Model] CodeJam
+- [Part 4 - digging deeper] of [Level up your CAP skills by learning to use the cds REPL]
 
 ## Questions
 
@@ -346,3 +739,10 @@ If you finish earlier than your fellow participants, you might like to ponder th
 [403]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/403
 [added a new service definition]: ../01/README.md#add-a-new-service-definition
 [project-local .cdsrc.json]: https://cap.cloud.sap/docs/node.js/cds-env#in-cdsrc-json
+[CSN]: https://cap.cloud.sap/docs/cds/csn
+[Service integration with SAP Cloud Application Programming Model]: https://github.com/SAP-samples/cap-service-integration-codejam/
+[connect to the remote service]: https://cap.cloud.sap/docs/node.js/cds-connect#cds-connect-to-1
+[in a previous exercise]: ../02/README.md#use-the-cds-repl-to-explore-path-expression-features-with-sqlite
+[Part 4 of Level up your CAP skills by learning to use the cds REPL]: https://qmacro.org/blog/posts/2025/03/21/level-up-your-cap-skills-by-learning-how-to-use-the-cds-repl/#part-4-digging-deeper
+[Part 4 - digging deeper]: https://qmacro.org/blog/posts/2025/03/21/level-up-your-cap-skills-by-learning-how-to-use-the-cds-repl/#part-4-digging-deeper
+[Level up your CAP skills by learning to use the cds REPL]: https://qmacro.org/blog/posts/2025/03/21/level-up-your-cap-skills-by-learning-how-to-use-the-cds-repl/

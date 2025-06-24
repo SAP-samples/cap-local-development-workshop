@@ -35,10 +35,49 @@ addUserInCdsrcFile() {
 EOF2
 }
 
+retrieveNorthbreezeEdmx() {
+  curl -s \
+    --url 'https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze/$metadata' \
+    > northbreeze.edmx
+}
+
+importNorthbreezeEdmx() {
+  cds import northbreeze.edmx
+}
+
+generateDataForSuppliers() {
+  mkdir srv/external/data/ \
+    && cds add data \
+      --filter Suppliers \
+      --records 5 \
+      --out srv/external/data/
+}
+
+fetchDataForNorthbreeze() {
+  for entity in Products Suppliers Categories; do
+    echo -n "$entity: "
+    curl \
+      --silent \
+      --url "https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze/$entity" \
+      | jq .value \
+      | tee "srv/external/data/northbreeze-$entity.json" \
+      | jq length
+  done
+}
+
+installSapCloudSdk() {
+  npm add @sap-cloud-sdk/http-client
+}
+
 main() {
 
   addAnnotationsToEx01
   addUserInCdsrcFile
+  retrieveNorthbreezeEdmx
+  importNorthbreezeEdmx
+  generateDataForSuppliers
+  fetchDataForNorthbreeze
+  installSapCloudSdk
 
 }
 
