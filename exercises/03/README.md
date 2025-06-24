@@ -6,7 +6,7 @@ Fortunately the "developer centric" nature of CAP's local-first strategy provide
 
 In this exercise we'll explore both those topics.
 
-## Observe the current state of authentication
+## Explore the auth in play
 
 You may have already noticed the mocked authentication approach declared in the CAP server's log lines.
 
@@ -25,11 +25,11 @@ and observe this output:
 }
 ```
 
-The "mocked" [authentication strategy] uses HTTP Basic Authentication (simple usernames and passwords) combined with [assignment of preconfigured roles to some test users]. It's more or less the same as the "basic" authentication strategy, but with this user and role pre-configuration.
+The "mocked" [authentication strategy] uses HTTP Basic Authentication (simple usernames and passwords) combined with [assignment of sample roles to pre-defined test users]. It's more or less the same as the "basic" authentication strategy, but with this user and role pre-configuration.
 
 ### Try accessing AdminService resources
 
-The `AdminService` (currently made available at `/odata/v4/admin`) has a [@requires] annotation which declares that only users with the `admin` role have access:
+The `AdminService` (currently made available at `/odata/v4/admin`) has a [@requires] annotation which declares that only users with the "admin" role have access:
 
 ```cds
 using { sap.capire.bookshop as my } from '../db/schema';
@@ -44,8 +44,10 @@ service AdminService @(requires:'admin') {
 👉 Try to access the `Books` resource within that service without supplying any authentication detail:
 
 ```bash
-curl -i -s localhost:4004/odata/v4/admin/Books
+curl -i localhost:4004/odata/v4/admin/Books
 ```
+
+> The `--include` (or `-i`) option causes `curl` to emit the response headers.
 
 This should result in an HTTP 401 response that will look like this (other response headers have been omitted for brevity):
 
@@ -67,10 +69,10 @@ As authorization checks (in play here) are predicated on verified identity claim
 👉 Try authenticating with the pre-defined user "yves", who has the role "internal-user":
 
 ```bash
-curl -i -s -u 'yves:' localhost:4004/odata/v4/admin/Books
+curl -i -u 'yves:' localhost:4004/odata/v4/admin/Books
 ```
 
-> The colon separates the username and password when supplying this detail via `curl`'s `--user` (or `-u`) option. None of the pre-defined users have passwords.
+> The colon separates the username and password when supplying this detail via `curl`'s `--user` (or `-u`) option. None of the pre-defined users have passwords. If you omit the colon from the value supplied to `-u` here, `curl` will prompt you for a password (you can just hit Enter to send an empty password in this case).
 
 Underlining the difference between HTTP [401] and HTTP [403] responses, this request should elicit:
 
@@ -110,6 +112,13 @@ curl -s -u 'alice:' localhost:4004/odata/v4/admin/Books \
   | jq .value[].title
 ```
 
+> The `--silent` (or `-s`) option turns on silent mode which means we don't get the typical progress info:
+>
+> ```log
+>   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+>                                  Dload  Upload   Total   Spent    Left  Speed
+> 100  4572  100  4572    0     0   611k      0 --:--:-- --:--:-- --:--:--  637k
+
 Success! Here's what the CAP server shows:
 
 ```log
@@ -127,13 +136,13 @@ and here's what's returned:
 "Catweazle"
 ```
 
-### Look at @requires and @restrict annotations with the Ex01Service
+### Explore the @requires and @restrict annotations with the Ex01Service
 
-In a previous exercise we [added a new service definition]; now we'll add some annotations to that to get a feel for how they work, and how the mocked strategy supports exactly what would be supported in production.
+In a previous exercise we [added a new service definition]; now we'll add some annotations to that to get a feel for how they work, but more importantly to see how the mocked strategy supports exactly what would be supported in production.
 
 #### Set up restrictions
 
-👉 Add annotation declarations to the `srv/ex01-service.cds` file so the entire content ends up looking like this:
+👉 Append annotation declarations to the `srv/ex01-service.cds` file so the entire content ends up looking like this:
 
 ```cds
 using { sap.capire.bookshop as my } from '../db/schema';
@@ -148,9 +157,9 @@ annotate Ex01Service.Books with @restrict: [
 ]);
 ```
 
-This sets up:
+These annotations set up:
 
-- a requirement for any request to be authenticated (i.e. made with a verified identity)
+- a requirement that any request to the service be authenticated (i.e. made with a verified identity)
 - a restriction on the `Books` entity in that any authenticated user can perform read operations, but only users with the "backoffice" role can perform write operations
 
 #### Make an unauthenticated request
@@ -158,10 +167,10 @@ This sets up:
 👉 Try to retrieve the details of the book with ID 207 ("Jane Eyre") without providing any authentication details:
 
 ```bash
-curl -i -s localhost:4004/ex01/Books/207
+curl -i localhost:4004/ex01/Books/207
 ```
 
-As expected, we don't get very far with this:
+As expected, we don't get very far with this; the output includes:
 
 ```log
 HTTP/1.1 401 Unauthorized
@@ -170,17 +179,23 @@ WWW-Authenticate: Basic realm="Users"
 Unauthorized
 ```
 
+and there's this line in the CAP server log:
+
+```log
+[basic] - 401 > login required
+```
+
 #### Make authenticated requests with an administrative user
 
 👉 Try that again, authenticating as the pre-defined administrative user "alice":
 
 ```bash
-curl -i -s -u 'alice:' localhost:4004/ex01/Books/207
+curl -i -u 'alice:' localhost:4004/ex01/Books/207
 ```
 
 The conditions of the (rather general) `READ` grant, combined with the `authenticated-user` requirement, are both fulfilled, meaning success for Alice:
 
-```
+```log
 HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
 
@@ -192,7 +207,7 @@ But can Alice perform operations with the `WRITE` semantic?
 👉 Try it:
 
 ```bash
-curl -X DELETE -i -s -u 'alice:' localhost:4004/ex01/Books/207
+curl -X DELETE -i -u 'alice:' localhost:4004/ex01/Books/207
 ```
 
 No!
@@ -267,7 +282,7 @@ Alongside the pre-defined users we can see Milton.
 👉 Let's try this new user, like this:
 
 ```bash
-curl -X DELETE -i -s -u 'milton:dontmovemydesk' localhost:4004/ex01/Books/207
+curl -X DELETE -i -u 'milton:dontmovemydesk' localhost:4004/ex01/Books/207
 ```
 
 Not quite!
@@ -292,7 +307,7 @@ Of course, we need to give him the "backoffice" role.
 Now try again:
 
 ```bash
-curl -X DELETE -i -s -u 'milton:dontmovemydesk' localhost:4004/ex01/Books/207
+curl -X DELETE -i -u 'milton:dontmovemydesk' localhost:4004/ex01/Books/207
 ```
 
 Success!
@@ -304,7 +319,6 @@ HTTP/1.1 204 No Content
 This just scratches the surface of what's possible; remember that the power of all of the abstracted authentication and authorisation layers (including users) is available to all authentication strategies, even (or "especially") the ones designed for local development. And there's no change when one moves to production, at that level.
 
 See the [Further reading](#further-reading) section for more information.
-
 
 ---
 
@@ -322,17 +336,8 @@ If you finish earlier than your fellow participants, you might like to ponder th
 <a name="footnote-1"></a>
 ### Footnote 1
 
-
-
-
-
-
-
-
-
 [authentication strategy]: https://cap.cloud.sap/docs/node.js/authentication#strategies
-[assignment of preconfigured roles to some test users]: https://cap.cloud.sap/docs/node.js/authentication#mock-users
-[role]: https://cap.cloud.sap/docs/node.js/authentication#mock-users
+[assignment of sample roles to pre-defined test users]: https://cap.cloud.sap/docs/node.js/authentication#mock-users
 [@requires]: https://cap.cloud.sap/docs/guides/security/authorization#requires
 [Authentication]: https://cap.cloud.sap/docs/node.js/authentication
 [CDS-based Authorization]: https://cap.cloud.sap/docs/guides/security/authorization
@@ -341,4 +346,3 @@ If you finish earlier than your fellow participants, you might like to ponder th
 [403]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/403
 [added a new service definition]: ../01/README.md#add-a-new-service-definition
 [project-local .cdsrc.json]: https://cap.cloud.sap/docs/node.js/cds-env#in-cdsrc-json
-

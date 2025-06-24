@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+addAnnotationsToEx01() {
+
+  cat << EOF1 >> srv/ex01-service.cds
+annotate Ex01Service with @requires: 'authenticated-user';
+annotate Ex01Service.Books with @restrict: [
+  { grant: 'READ' },
+  { grant: 'WRITE', to: 'backoffice' }
+];
+EOF1
+
+}
+
+addUserInCdsrcFile() {
+
+  cat << EOF2 > .cdsrc.json
+{
+  "requires": {
+    "auth": {
+      "users": {
+        "milton": {
+          "password": "dontmovemydesk",
+          "roles": [
+            "stapler",
+            "backoffice"
+          ]
+        }
+      }
+    }
+  }
+}
+EOF2
+}
+
+main() {
+
+  addAnnotationsToEx01
+  addUserInCdsrcFile
+
+}
+
+if [[ ! $0 == "-bash" ]]; then
+  main "$@"
+fi
