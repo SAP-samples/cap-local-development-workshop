@@ -4,7 +4,7 @@ There's no avoiding the fact that if you want your CAP apps and services to be u
 
 Fortunately the "developer centric" nature of CAP's local-first strategy provides various ways to not _ignore_ the reality, but to _suspend_ it until it's really needed. With the "mocking" approach, we can design and declare our domain model and adorn it with annotations relating to authentication, and rely on mocked authentication while still thinking about, defining and testing user role and attribute based access control. We can also have required services mocked for us so we can connect to them from our own.
 
-In this exercise we'll explore both those topics.
+In this exercise we'll explore both those mockable areas.
 
 ## Explore the auth in play
 
@@ -29,7 +29,7 @@ The "mocked" [authentication strategy] uses HTTP Basic Authentication (simple us
 
 ### Try accessing AdminService resources
 
-The `AdminService` (currently made available at `/odata/v4/admin`) has a [@requires] annotation which declares that only users with the "admin" role have access:
+The `AdminService` (currently made available at `/odata/v4/admin`) has a [@requires] annotation which declares that only users with the "admin" role have access (in `srv/admin-service.cds`):
 
 ```cds
 using { sap.capire.bookshop as my } from '../db/schema';
@@ -72,9 +72,9 @@ As authorization checks (in play here) are predicated on verified identity claim
 curl -i -u 'yves:' localhost:4004/odata/v4/admin/Books
 ```
 
-> The colon separates the username and password when supplying this detail via `curl`'s `--user` (or `-u`) option. None of the pre-defined users have passwords. If you omit the colon from the value supplied to `-u` here, `curl` will prompt you for a password (you can just hit Enter to send an empty password in this case).
+> The colon separates username and password values when supplying such credentials via `curl`'s `--user` (or `-u`) option. None of the pre-defined users have passwords (i.e. the passwords are "empty"). If you omit the colon from the value supplied to `-u` here, `curl` will prompt you for a password (you can just hit Enter to send an empty password in this case).
 
-Underlining the difference between HTTP [401] and HTTP [403] responses, this request should elicit:
+This request should elicit an HTTP status thus:
 
 ```log
 HTTP/1.1 403 Forbidden
@@ -96,23 +96,23 @@ with some extra info in the CAP server log output too:
 }
 ```
 
-> Briefly:
->
-> Response Code | Meaning | In short
-> -|-|-
-> 401|The request lacked valid authentication credentials|Can't verify who you are
-> 403|The request did contain valid credentials (i.e. was properly authenticated) but the authenticated user does not have the requisite permissions|Your identify is verified but you don't have access
+Incidentally, this nicely underlines the difference between HTTP [401] and HTTP [403] responses:
+
+HTTP Response Code | Meaning | Summary
+-|-|-
+401|The request lacked valid authentication credentials|Can't verify who you are
+403|The request did contain valid credentials (i.e. was properly authenticated) but the authenticated user does not have the requisite permissions|Your identify is verified but you don't have access
 
 #### Make a request authenticated as a user with the requisite role
 
-👉 Repeat the same resource request but this time as user "alice", who does have the "admin" role:
+👉 Repeat the same resource request but this time as user "alice", who does have the "admin" role listed in the `@requires` annotation:
 
 ```bash
 curl -s -u 'alice:' localhost:4004/odata/v4/admin/Books \
   | jq .value[].title
 ```
 
-> The `--silent` (or `-s`) option turns on silent mode which means we don't get the typical progress info:
+> The `--silent` (or `-s`) option turns on silent mode which means we don't get the typical response resource retrieval progress info:
 >
 > ```log
 >   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -138,11 +138,11 @@ and here's what's returned:
 
 ### Explore the @requires and @restrict annotations with the Ex01Service
 
-In a previous exercise we [added a new service definition]; now we'll add some annotations to that to get a feel for how they work, but more importantly to see how the mocked strategy supports exactly what would be supported in production.
+In a previous exercise we [added a new service definition] in `srv/ex01-service.cds`; now we'll add some annotations to that to get a feel for how they work, but more importantly to see how the mocked strategy supports exactly what would be supported in production.
 
 #### Set up restrictions
 
-👉 Append annotation declarations to the `srv/ex01-service.cds` file so the entire content ends up looking like this:
+👉 Append a couple of annotation declarations to the `srv/ex01-service.cds` file so the entire content ends up looking like this:
 
 ```cds
 using { sap.capire.bookshop as my } from '../db/schema';
@@ -161,6 +161,8 @@ These annotations set up:
 
 - a requirement that any request to the service be authenticated (i.e. made with a verified identity)
 - a restriction on the `Books` entity in that any authenticated user can perform read operations, but only users with the "backoffice" role can perform write operations
+
+> If you're wondering about `@(requires: ...)` vs `@requires: ...`, see the link to the "Expressing multiple annotations with @(...)" section of a blog post on OData and CDS annotations in the [Further reading] section below.
 
 #### Make an unauthenticated request
 
@@ -220,7 +222,7 @@ HTTP/1.1 403 Forbidden
 
 #### Define a new office user
 
-While there are pre-defined users we can make use of in the mocked authentication strategy, we can define our own too, which is especially helpful when we're iterating locally on building out the domain model and including the security considerations with that.
+While there are pre-defined users we can make use of in the mocked authentication strategy, we can define our own too, which is especially helpful when we're iterating locally on building out the domain model and including the security considerations with that, which often means we're also defining our own roles (such as "backoffice" in this `{ grant: 'WRITE', to: 'backoffice'}` example here).
 
 We could put this configuration in `package.json#cds` but for a change, let's use a [project-local .cdsrc.json] file.
 
@@ -245,7 +247,7 @@ We could put this configuration in `package.json#cds` but for a change, let's us
 
 Once this is saved, the CAP server will restart.
 
-Just for interest, check the effective environment, specifically for the auth details:
+👉 To satisfy our curiosity, check the effective environment, specifically for the auth details:
 
 ```bash
 cds env requires.auth
@@ -324,11 +326,11 @@ See the [Further reading](#further-reading) section for more information.
 
 Working locally doesn't mean that we need to avoid development that involves remote services. A remote service API definition can be downloaded and imported, so that it becomes known to the CAP server (as a "required" service, rather than a "provided" service), and via the translation of the API definition to an internal model representation in Core Schema Notation [CSN] it can also be given active behavior and even test data.
 
-Everyone loves Northwind (don't they?) so let's use a cut-down version of Northwind, called Northbreeze, which is available at <https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze>.
+Everyone loves Northwind (don't they?) so let's use a cut-down version of Northwind, called Northbreeze, which is available as an OData v4 service at <https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze>
 
 ### Import the API definition
 
-The Northbreeze service is an OData v4 service and the API definition for that is essentially the EDMX available in the service's metadata document.
+The API definition of the Northbreeze service is essentially the EDMX available in the service's metadata document.
 
 👉 Retrieve the metadata document resource and store the representation in a file:
 
@@ -338,7 +340,7 @@ curl -s \
   > northbreeze.edmx
 ```
 
-👉 Now use the `cds import` command to import the API definition (in its EDMX form) and convert it to CSN:
+👉 Now use the `cds import` command to import the API definition (in this EDMX form) and convert it to CSN:
 
 ```bash
 cds import northbreeze.edmx
@@ -381,7 +383,7 @@ Moreover, a reference to this as a "required" service has been added to the `pac
 cds env requires
 ```
 
-As well as the sections for `middlewares`, `queue`, `auth` and `db` (which have been reduced for brevity), we now have `northbreeze` listed, an "external" "OData" resource whose "model" is known and which is "implemented" by a built-in remote service module:
+As well as the sections for `middlewares`, `queue`, `auth` and `db` (which have been reduced for brevity here), we now have `northbreeze` listed, an external OData resource whose model is known and which is implemented by a built-in remote-service module:
 
 ```log
 {
@@ -420,7 +422,9 @@ As well as the sections for `middlewares`, `queue`, `auth` and `db` (which have 
 
 ### Have the service mocked
 
-👉 Start mocking this service:
+From this point until the end of this exercise, you'll be digging into the mocking of this Northbreeze service.
+
+👉 So for now, stop the CAP server that's still running and listening on port 4004, and then, in that same terminal session, start mocking this service (using the same terminal session here is just to keep the "noise" to a minimum, not because of any technical requirement or restriction):
 
 ```bash
 cds mock northbreeze --port 5005
@@ -451,7 +455,7 @@ But there's no data right now, as illustrated with simple request like this:
 
 ### Add some data
 
-The sensible place to put data is "next to" the model definition, which means here, in this case:
+The sensible place to put data is "next to" the model definition for this external service, which means here:
 
 ```text
 srv/
@@ -469,7 +473,7 @@ srv/
 
 #### Use generated data
 
-👉 So, after stopping the server, create a `data/` directory in `srv/external/`, and then use the "data" facet with `cds add` to generate a few records of mock data for the `Suppliers` entity:
+👉 So, after stopping the mocking server process, create a `data/` directory in `srv/external/`, use the "data" facet with `cds add` to generate a few records of mock data for the `Suppliers` entity, and then restart the mocking:
 
 ```bash
 mkdir srv/external/data/ \
@@ -477,6 +481,7 @@ mkdir srv/external/data/ \
     --filter Suppliers \
     --records 5 \
     --out srv/external/data/
+  && cds mock northbreeze --port 5005
 ```
 
 This results in:
@@ -523,7 +528,11 @@ which should show output similar to this (massively reduced here for brevity):
 
 But we can do better. Why not grab and store some "real" data from the actual service, and use it when we mock?
 
-👉 First, remove the CSV file we just generated:
+👉 First, stop the mock server process again.
+
+> Remember that the monitor-and-auto-restart feature comes with `cds watch`, not `cds mock`; that's why we're stopping and starting the `cds mock` server.
+
+👉 Now, remove the CSV file we just generated:
 
 ```bash
 rm srv/external/data/northbreeze-Suppliers.csv
@@ -543,7 +552,7 @@ for entity in Products Suppliers Categories; do
 done
 ```
 
-This should result in the retrieval of a number of records for each entityset:
+This should result in a number of records for each entityset:
 
 ```log
 Products: 77
@@ -575,7 +584,7 @@ srv/
 cds mock northbreeze --port 5005
 ```
 
-👉 and re-request the same entityset:
+👉 and (in another terminal session) re-request the same entityset:
 
 ```bash
 curl -s localhost:5005/odata/v4/northbreeze/Suppliers | jq .value
@@ -610,7 +619,7 @@ Great! Now we have a fully mocked external service complete with real data.
 
 ### Access the mocked remote service from the cds REPL (bonus)
 
-If you have time, you can build on your knowledge of and confidence with the cds REPL by connecting to this mocked remote service from within the cds REPL.
+If you have time, you can build on your confidence with an interactive REPL context by connecting to this mocked remote service from within the cds REPL.
 
 👉 First, let's have a look at the "wiring" for this mocked remote service in our local development mode context; take a peek in the `.cds-services.json` file in your home directory:
 
@@ -618,7 +627,7 @@ If you have time, you can build on your knowledge of and confidence with the cds
 jq . ~/.cds-services.json
 ```
 
-This is a file that the CAP server runtime uses in local development mode to declare and detail which services are (being) provided, and where. It will look something like this (the server IDs are process IDs so will be different for you):
+This is a file that the CAP server runtime uses in local development mode to declare and detail which services are (being) provided, and where. It will look something like this (the server IDs are just process IDs so they will be different for you):
 
 ```json
 {
@@ -641,6 +650,8 @@ This is a file that the CAP server runtime uses in local development mode to dec
   }
 }
 ```
+
+We can see from this that any local CAP server requiring the "northbreeze" service knows that it's available, and how to reach it (via the `credentials.url` property).
 
 👉 Now start the cds REPL:
 
@@ -681,13 +692,25 @@ nb: RemoteService {
 }
 ```
 
+We can indeed see that the connection object in `nb` contains information on "how to reach" the service:
+
+```text
+> nb.destination
+{
+  name: 'northbreeze',
+  url: 'http://localhost:5005/odata/v4/northbreeze'
+}
+```
+
+(Does this structure [remind you of something]? Good, because that's essentially what it is!)
+
 👉 Now, still at the cds REPL prompt, construct a query on the fly and send it across the connection to your locally mocked version of the remote Northbreeze service:
 
 ```text
 await nb.run(SELECT `CompanyName` .from(`Suppliers`))
 ```
 
-> Remember that pretty much everything in this context is going to be asynchronous, i.e. in a Promise wrapper, so `await` is needed here to realise the call.
+> Remember that pretty much everything in this context is going to be asynchronous, i.e. in a Promise wrapper, so `await` is needed here to resolve the calls and the values they evaluate to.
 
 This results in:
 
@@ -709,7 +732,12 @@ This results in:
 ]
 ```
 
-Excellent!
+Excellent! It's worth pausing for a second to take this in:
+
+- everything is happening locally
+- but even in this local context, we're still connecting "remotely" to the mocked Northbreeze service
+- there are local development specific affordances in play here (such as the `~/.cds-services.json` file) that make coordination of service management simple when it needs to be
+- even though everything is happening locally, the SAP Cloud SDK is still in play and doesn't really care about the difference between one (mocked) remote service and another, an abstraction which is of great benefit to us
 
 ---
 
@@ -719,6 +747,7 @@ Excellent!
 - The [CDS-based Authorization] topic in Capire
 - The contents of the [Service integration with SAP Cloud Application Programming Model] CodeJam
 - [Part 4 - digging deeper] of [Level up your CAP skills by learning to use the cds REPL]
+- The [Expressing multiple annotations with @(...)] section of [A deep dive into OData and CDS annotations]
 
 ---
 
@@ -741,6 +770,8 @@ Excellent!
 [Service integration with SAP Cloud Application Programming Model]: https://github.com/SAP-samples/cap-service-integration-codejam/
 [connect to the remote service]: https://cap.cloud.sap/docs/node.js/cds-connect#cds-connect-to-1
 [in a previous exercise]: ../02/README.md#use-the-cds-repl-to-explore-path-expression-features-with-sqlite
-[Part 4 of Level up your CAP skills by learning to use the cds REPL]: https://qmacro.org/blog/posts/2025/03/21/level-up-your-cap-skills-by-learning-how-to-use-the-cds-repl/#part-4-digging-deeper
 [Part 4 - digging deeper]: https://qmacro.org/blog/posts/2025/03/21/level-up-your-cap-skills-by-learning-how-to-use-the-cds-repl/#part-4-digging-deeper
 [Level up your CAP skills by learning to use the cds REPL]: https://qmacro.org/blog/posts/2025/03/21/level-up-your-cap-skills-by-learning-how-to-use-the-cds-repl/
+[A deep dive into OData and CDS annotations]: https://qmacro.org/blog/posts/2023/03/10/a-deep-dive-into-odata-and-cds-annotations/
+[Expressing multiple annotations with @(...)]: https://qmacro.org/blog/posts/2023/03/10/a-deep-dive-into-odata-and-cds-annotations/#expressing-multiple-annotations-with-
+[remind you of something]: https://sap.github.io/cloud-sdk/docs/js/features/connectivity/destinations
