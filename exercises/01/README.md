@@ -531,14 +531,6 @@ That's the end of this exercise!
 
 ---
 
-## Questions
-
-If you finish earlier than your fellow participants, you might like to ponder these questions. There isn't always a single correct answer and there are no prizes - they're just to give you something else to think about.
-
-1. What was the reason for using a file specifically called `services.cds` when you extended the `Ex01Service` with a new `Sales` entity?
-
----
-
 ## Footnotes
 
 <a name="footnote-1"></a>
