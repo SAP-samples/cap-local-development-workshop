@@ -422,7 +422,7 @@ As well as the sections for `middlewares`, `queue`, `auth` and `db` (which have 
 
 ### Have the service mocked
 
-From this point until the end of this exercise, you'll be digging into the mocking of this Northbreeze service.
+From this point until the end of this exercise, you'll be digging into the mocking of this Northbreeze service (see [footnote 1](#footnote-1)).
 
 👉 So for now, stop the CAP server that's still running and listening on port 4004, and then, in that same terminal session, start mocking this service (using the same terminal session here is just to keep the "noise" to a minimum, not because of any technical requirement or restriction):
 
@@ -756,6 +756,8 @@ Excellent! It's worth pausing for a second to take this in:
 <a name="footnote-1"></a>
 ### Footnote 1
 
+We are going to be mocking in a separate CAP server process, for a more realistic scenario, albeit still local. It is also possible to use in-process mocking, where the same single CAP server provides services and also mocks the required services, but we won't be covering that here. See [Run local with mocks] in Capire for more info.
+
 [authentication strategy]: https://cap.cloud.sap/docs/node.js/authentication#strategies
 [assignment of sample roles to pre-defined test users]: https://cap.cloud.sap/docs/node.js/authentication#mock-users
 [@requires]: https://cap.cloud.sap/docs/guides/security/authorization#requires
@@ -775,3 +777,4 @@ Excellent! It's worth pausing for a second to take this in:
 [A deep dive into OData and CDS annotations]: https://qmacro.org/blog/posts/2023/03/10/a-deep-dive-into-odata-and-cds-annotations/
 [Expressing multiple annotations with @(...)]: https://qmacro.org/blog/posts/2023/03/10/a-deep-dive-into-odata-and-cds-annotations/#expressing-multiple-annotations-with-
 [remind you of something]: https://sap.github.io/cloud-sdk/docs/js/features/connectivity/destinations
+[Run local with mocks]: https://cap.cloud.sap/docs/guides/using-services#run-local-with-mocks
