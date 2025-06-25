@@ -2,11 +2,39 @@
 
 set -eo pipefail
 
+addMessagingToRequires() {
+  local tempfile
+  tempfile="$(mktemp)"
+  cp package.json "$tempfile" \
+    && jq '. * { cds: { requires: { "messaging": true } } }' "$tempfile" > package.json \
+    && rm "$tempfile"
+}
+
+addBookRemovedEventDefinition() {
+  sed -i -e '/entity Books as projection on my.Books/a\' -e '  event bookremoved: { ID: Books:ID; }' srv/ex01-service.cds
+}
+
+addEx01Implementation() {
+  cat << EOF > srv/ex01-service.js
+const cds = require('@sap/cds')
+
+class Ex01Service extends cds.ApplicationService { init() {
+  this.after (['DELETE'], 'Books', (_, req) => {
+    this.emit('bookremoved', req.data)
+  })
+  return super.init()
+}}
+
+module.exports = Ex01Service
+EOF
+}
+
 main() {
 
+  addMessagingToRequires
+  addBookRemovedEventDefinition
+  addEx01Implementation
 
 }
 
-if [[ ! $0 == "-bash" ]]; then
-  main "$@"
-fi
+main "$@"

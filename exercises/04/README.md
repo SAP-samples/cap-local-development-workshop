@@ -85,9 +85,9 @@ We'll define an event and emit it.
 
 ### Declare a requirement for file-based-messaging
 
-First though we need to define a requirement for messaging. And for our local development scenario, we should use file-based messaging. Let's be explicit, by defining that within the "development" profile (see [footnote-2](#footnote-2)).
+First though we need to define a requirement for messaging. And for our local development scenario, we should use file-based messaging, which is the default.
 
-👉 Add the `messaging` definition to the `package.json#cds.requires` section, so it looks like this:
+👉 Add a `messaging` section within `package.json#cds.requires`, so it looks like this:
 
 ```json
   "cds": {
@@ -112,14 +112,20 @@ First though we need to define a requirement for messaging. And for our local de
         "kind": "odata",
         "model": "srv/external/northbreeze"
       },
-      "messaging": {
-        "[development]": {
-          "kind": "file-based-messaging"
-        }
-      }
+      "messaging": true
     }
   }
 ```
+
+> We could also have been more explicit, specifying the value for `messaging` like this:
+>
+> ```json
+> {
+>   "messaging": {
+>     "kind": "file-based-messaging"
+>   }
+> }
+> ```
 
 ### Define an event
 
@@ -251,18 +257,7 @@ we also now see that something has been written to our file-based messaging stor
 Ex01Service.bookremoved {"data":{"ID":251},"headers":{"x-correlation-id":"c72e2a47-2faf-4bcb-9f54-37ebb2ca88a6"}}
 ```
 
----
-
-## Further reading
-
----
-
-## Footnotes
-
-<a name="footnote-1"></a>
-### Footnote 1
-
-For options that really only make sense in local development mode, it's often a good idea to express that via an explicit wrapping within the "development" profile context.
+But what happens now? We'll find out with a more comprehensive example in the next exercise where we also learn how to manage a larger scale CAP project, with independent services, locally.
 
 [The Art and Science of CAP]: https://qmacro.org/blog/posts/2024/12/06/the-art-and-science-of-cap/
 [Everything is a service]: https://qmacro.org/blog/posts/2024/12/10/tasc-notes-part-4/#everything-is-a-service
