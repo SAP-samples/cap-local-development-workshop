@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+main() {
+
+
+}
+
+if [[ ! $0 == "-bash" ]]; then
+  main "$@"
+fi
