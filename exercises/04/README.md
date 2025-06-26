@@ -1,4 +1,4 @@
-# Exercise 04 - local messaging and events
+# Exercise 04 - a first look at local messaging and events
 
 In [The Art and Science of CAP] series Daniel Hutzel shared with us many of the influences that informed CAP's design, and explained in great detail some of the core axioms. There are key philosophical truths that are inherent in what CAP is, two of which are:
 
@@ -9,7 +9,7 @@ In this exercise we'll explore [events and messaging] in CAP, and in particular,
 
 The general idea, as you might expect, is that CAP's eventing is agnostic at the definition and API level; the actual mechanism used to manage the receipt, queueing and relaying of messages is an implementation and platform context detail.
 
-Whether the "message channel" facilities are provided by SAP Cloud Application Event Hub, SAP Event Mesh, or another mechanism, is largely irrelevant from a developer perspective, especially in a local context, where (in addition to an in-process facility), [file-based messaging] is available and the main focus of this exercise.
+Whether the "message channel" facilities are provided by SAP Cloud Application Event Hub, SAP Event Mesh, or another mechanism, is largely irrelevant from a developer perspective, especially in a local context, where, in addition to an in-process facility, [file-based messaging] is available and the main focus of this exercise.
 
 ## Take a quick look at in-process eventing
 
@@ -52,7 +52,7 @@ Service {
 ['small', 'medium', 'large'].forEach(size => srv.emit('widget-produced', { size: size }))
 ```
 
-Each of the three events emitted reach the recipient causing these log lines to be shown:
+Each of the three events emitted reach the recipient causing this to be shown:
 
 ```log
 Received: EventMessage { event: 'widget-produced', data: { size: 'small' } }
@@ -63,6 +63,8 @@ Received: EventMessage { event: 'widget-produced', data: { size: 'large' } }
 This is a simple example of in-process eventing - emission, transmission, receipt and handling of messages happened in the same process. It can be as simple as that.
 
 👉 Exit the REPL session.
+
+> For more info on using the cds REPL, see the [Further reading](#further-reading) section below.
 
 ## Explore file-based messaging
 
@@ -83,9 +85,84 @@ annotate Ex01Service.Books with @restrict: [
 
 We'll define an event and emit it.
 
+### Switch the classics data back to the default development profile
+
+Before we start, and to keep things simple, let's switch back the authors, books and genres data from within the classics profile back to the default, i.e. let's move:
+
+```text
+db
+├── classics
+│   ├── data
+│   │   ├── sap.capire.bookshop-Authors.csv
+│   │   ├── sap.capire.bookshop-Books.csv
+│   │   ├── sap.capire.bookshop-Books_texts.csv
+│   │   └── sap.capire.bookshop-Genres.csv
+│   └── index.cds
+├── hitchhikers
+│   ├── data
+│   │   ├── sap.capire.bookshop-Authors.json
+│   │   └── sap.capire.bookshop-Books.json
+│   └── index.cds
+└── schema.cds
+```
+
+to be:
+
+```text
+db
+├── data
+│   ├── sap.capire.bookshop-Authors.csv
+│   ├── sap.capire.bookshop-Books.csv
+│   ├── sap.capire.bookshop-Books_texts.csv
+│   └── sap.capire.bookshop-Genres.csv
+├── hitchhikers
+│   ├── data
+│   │   ├── sap.capire.bookshop-Authors.json
+│   │   └── sap.capire.bookshop-Books.json
+│   └── index.cds
+└── schema.cds
+```
+
+👉 Do this now:
+
+```bash
+mv db/classics/data/ db/ && rm -rf db/classics/
+```
+
+👉 Also, to keep things clean, remove the corresponding entry in `package.json#cds.requires`:
+
+```text
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": ":memory:"
+        }
+      },
+      "[classics]": {                     -+
+        "initdata": {                      |
+          "model": "db/classics/"          | remove this
+        }                                  |
+      },                                  -+
+      "[hitchhikers]": {
+        "initdata": {
+          "model": "db/hitchhikers/"
+        }
+      },
+      "northbreeze": {
+        "kind": "odata",
+        "model": "srv/external/northbreeze"
+      }
+    }
+  }
+```
+
+👉 Remain in this file as you'll be adding something in the next part.
+
 ### Declare a requirement for file-based-messaging
 
-First though we need to define a requirement for messaging. And for our local development scenario, we should use file-based messaging, which is the default.
+OK, the first thing we need to do is define a requirement for messaging. And for our local development scenario, we should use file-based messaging, which is the default.
 
 👉 Add a `messaging` section within `package.json#cds.requires`, so it looks like this:
 
@@ -96,11 +173,6 @@ First though we need to define a requirement for messaging. And for our local de
         "kind": "sqlite",
         "credentials": {
           "url": ":memory:"
-        }
-      },
-      "[classics]": {
-        "initdata": {
-          "model": "db/classics/"
         }
       },
       "[hitchhikers]": {
@@ -137,12 +209,12 @@ In the previous exercise we created the "milton" user and gave them the "backoff
 ...
 @path: '/ex01' service Ex01Service {
   entity Books as projection on my.Books;
-  event bookremoved: { ID: Books:ID; } // <--
+  event bookremoved: { ID: Books:ID; }     // <---
 }
 ...
 ```
 
-The type structure is deliberately as simple as possible for this example, designed to convey just the ID of the book that was removed.
+The type structure (`{ ... }`) is deliberately as simple as possible for this example, designed to convey just the ID of the book that was removed.
 
 ### Add handler code to emit the event
 
@@ -168,10 +240,10 @@ module.exports = Ex01Service
 
 This defines an "after" phase handler for DELETE events (yes, let's use the word "event" here too) relating to the `Books` entity. The signature of an [after handler] is such that the first parameter is the data relating to the event, and the second parameter is the request object. In the request object there's the data; let's have a look at what that is in this context.
 
-👉 Start up the CAP server with the "classics" profile again, like this:
+👉 Start up the CAP server again, like this:
 
 ```bash
-cds w --profile classics
+cds w
 ```
 
 Just out of interest, notice in the log output that instead of the built-in service implementation:
@@ -204,7 +276,7 @@ bookremoved { ID: 251 }
 
 Great - the `req.data` is exactly what we need for the event payload.
 
-👉 Now adjust the code in the "after" phase handler changing:
+👉 Now adjust the code in the "after" phase handler, changing:
 
 ```javascript
 console.log('bookremoved', req.data)
@@ -257,7 +329,13 @@ we also now see that something has been written to our file-based messaging stor
 Ex01Service.bookremoved {"data":{"ID":251},"headers":{"x-correlation-id":"c72e2a47-2faf-4bcb-9f54-37ebb2ca88a6"}}
 ```
 
-But what happens now? We'll find out with a more comprehensive example in the next exercise where we also learn how to manage a larger scale CAP project, with independent services, locally.
+But what happens now? How do we receive such a message? We'll find out with a more comprehensive example in the next exercise where we also learn how to manage a larger scale CAP project, with independent services, locally.
+
+---
+
+## Further reading
+
+- [Level up your CAP skills by learning how to use the cds REPL]
 
 [The Art and Science of CAP]: https://qmacro.org/blog/posts/2024/12/06/the-art-and-science-of-cap/
 [Everything is a service]: https://qmacro.org/blog/posts/2024/12/10/tasc-notes-part-4/#everything-is-a-service
@@ -267,3 +345,4 @@ But what happens now? We'll find out with a more comprehensive example in the ne
 [file-based messaging]: https://cap.cloud.sap/docs/guides/messaging/#_1-use-file-based-messaging-in-development
 [custom event definition]: https://cap.cloud.sap/docs/cds/cdl#events
 [after handler]: https://cap.cloud.sap/docs/node.js/core-services#srv-after-request
+[Level up your CAP skills by learning how to use the cds REPL]: https://qmacro.org/blog/posts/2025/03/21/level-up-your-cap-skills-by-learning-how-to-use-the-cds-repl/
