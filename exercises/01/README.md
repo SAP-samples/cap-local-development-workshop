@@ -390,7 +390,7 @@ cds add data \
   --filter Sales \
   --records 3 \
   --out test/data/ \
-  --force \
+  --force
 ```
 
 > The `--force` option here isn't stricly necessary but useful in case we want to re-run this invocation later.
