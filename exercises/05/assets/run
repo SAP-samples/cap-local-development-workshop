@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+createMonoRepo() {
+
+  mkdir capire && cd $_
+  jq -n '{name: "@capire/samples", workspaces: ["*"]}' > package.json
+  git init
+  cat << EOF > .gitignore
+node_modules
+gen
+EOF
+}
+
+addSubmodules() {
+  for project in bookstore reviews orders common bookshop data-viewer; do
+    git submodule add "https://github.com/capire/$project"
+  done
+  git submodule update --init
+}
+
+npmInstall() {
+  npm install
+}
+
+main() {
+
+  createMonoRepo
+  addSubmodules
+  npmInstall
+
+}
+
+if [[ ! $0 == "-bash" ]]; then
+  main "$@"
+fi

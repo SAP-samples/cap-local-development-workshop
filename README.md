@@ -32,3 +32,4 @@ Each of the following exercises touches on one or more of the topic areas above.
 - [02 - configuration profiles, more on initial data, and the cds REPL](exercises/02/)
 - [03 - mocking auth and required services](exercises/03)
 - [04 - a first look at local messaging and events](exercises/04)
+- [05 - workspaces, monorepos and more on messaging and events](exercises/05)
