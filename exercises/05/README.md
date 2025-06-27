@@ -197,7 +197,7 @@ Hello from myplugin
     Waiting for some to arrive...
 ```
 
-At this point we're done with this section, so delete this `plugintest/` directory:
+👉 At this point we're done with this section, so delete this `plugintest/` directory:
 
 ```bash
 cd .. && rm -rf plugintest/
@@ -217,7 +217,7 @@ The individual repository versions of CAP projects within the [cloud-cap-samples
 
 We'll create a top level project to be the "head" of the monorepo itself, and bring in individual CAP Node.js project repositories as git submodules, organizing them using the NPM workspace concept.
 
-Do that now in the simplest possible way:
+👉 Do that now in the simplest possible way:
 
 ```bash
 mkdir capire \
@@ -236,7 +236,7 @@ This is [the simplest thing that could possibly work] - a basic NPM project with
 
 The project has already been initialized from a git perspective, so we can now bring in the individual projects as submodules, and manage them locally in separate NPM workspaces.
 
-Do that now:
+👉 Do that now:
 
 ```bash
 for project in bookstore reviews orders common bookshop data-viewer; do
@@ -294,7 +294,7 @@ Nothing has been installed in any of the project workspace directories. Indeed, 
 
 In the light of this, what's in the monorepo project's root `node_modules/` directory?
 
-Let's take a look, with:
+👉 Let's take a look, with:
 
 ```bash
 tree -L 2 node_modules/ | more
@@ -477,7 +477,7 @@ This tells us:
 
 It also shows us that it received an event message!
 
-Take a look at the contents of `~/.cds-msg-box` now:
+👉 Take a look at the contents of `~/.cds-msg-box` now:
 
 ```bash
 cat ~/.cds-msg-box
