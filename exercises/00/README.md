@@ -14,9 +14,10 @@ Here are the options. Choose one of them, and then jump forward to the [check th
 
 ### Option 1 - dev container and VS Code installed locally
 
-If you already have or can install VS Code on your machine, then this option may be for you.
+If you already have or can install Docker Desktop and VS Code on your machine, then this option may be for you.
 
-- Ensure you have installed the [Dev Containers] extension in VS Code.
+- Ensure Docker Desktop is running
+- Check that you have the [Dev Containers] extension installed in VS Code.
 - Clone this repo `git clone https://github.com/SAP-samples/cap-local-development-workshop`.
 - Open the directory containing the clone with VS Code, for example like this: `code cap-local-development-workshop`, or via the VS Code menu.
 - Choose to "Reopen in Container" when asked:
