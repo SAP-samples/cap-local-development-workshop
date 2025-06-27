@@ -52,7 +52,9 @@ In addition, there is some loading of data into an in-memory database:
 
 ## Dig in to the SQLite storage
 
-👉 Inspect the books data like this:
+👉 Inspect the books data
+
+In an additional terminal window, execute:
 
 ```bash
 curl -s localhost:4004/ex01/Books \
@@ -390,7 +392,7 @@ cds add data \
   --filter Sales \
   --records 3 \
   --out test/data/ \
-  --force \
+  --force
 ```
 
 > The `--force` option here isn't stricly necessary but useful in case we want to re-run this invocation later.
