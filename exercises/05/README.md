@@ -1,6 +1,6 @@
 # Exercise 05 - workspaces, monorepos and more on messaging and events
 
-As the late English Renaissance poet John Donne penned: [No man is an island]. And no CAP project is an island, either. While what one can create based on an invocation of `cds init` is enough for a standalone CAP service, it likely does not ... stand alone.
+As the late English Renaissance poet John Donne penned: [No man is an island]. And no CAP project is an island, either. While what we can create based on an invocation of `cds init` is enough for a standalone CAP service, it likely does not ... stand alone.
 
 In Node.js the [workspaces] concept in NPM is often used to manage dependencies and supporting or related projects in the form of NPM packages. Think of workspaces as the next step up from the lower level [npm-link] concept. A key feature of workspace-based organization of related projects (packages) is that the development and use of those related projects ... can be done locally, that is without the need to involve the NPM package registry.
 
@@ -8,14 +8,15 @@ In Node.js the [workspaces] concept in NPM is often used to manage dependencies 
 
 CAP Node.js typically uses the workspace concept for the development of [CDS plugin packages]. There's a simple example of this in [CAP Node.js plugins - part 1 - how things work], which is worth exploring here first.
 
-👉 We are done with the project we've been working on, so first stop any running CAP servers and close any terminal and editor sessions.
+👉 We are done with the project we've been working on thus far, so first stop any running CAP servers and close any terminal and editor sessions.
 
 ### Initialize a new CAP Node.js project
 
-👉 In a new terminal session window, initialize a new CAP Node.js project as normal:
+👉 In a new terminal session window, initialize a new CAP Node.js project in the workshop root directory:
 
 ```bash
-cds init plugintest && cd $_
+cd /workspaces/cap-local-development-workshop/ \
+  && cds init plugintest && cd $_
 ```
 
 👉 Examine the contents of `package.json`:
@@ -51,7 +52,7 @@ The contents should look like this:
 }
 ```
 
-So far so good. At this point we'll imagine we're going to start working on a new plugin.
+So far so good. At this point let's imagine we're going to start working on a new plugin.
 
 ### Create the plugin package
 
@@ -85,7 +86,7 @@ added 128 packages in 1m
 
 ### Add the dependency
 
-👉 We can now declare a dependency, that our CAP project `plugintest` relies upon this new `myplugin` package. Do that now:
+👉 We can now declare a dependency, that our CAP project `plugintest` relies upon this new `myplugin` package. Do that now (remembering we're still in the top level `plugintest/` directory):
 
 ```bash
 npm add myplugin
@@ -165,7 +166,7 @@ This should show us (heavily reduced):
 └── srv
 ```
 
-Notice how the dependency (`plugintest` -> `myplugin`) is resolved via a symbolic link to the workspace.
+Notice how the dependency (`plugintest` -> `myplugin`) is resolved via a _symbolic link_ to the workspace.
 
 ### Add a basic plugin hook
 
@@ -176,6 +177,8 @@ Just to complete this short exploration, let's create a basic plugin hook and st
 ```javascript
 console.log('Hello from myplugin')
 ```
+
+> The `cds-plugin.js` name is [special].
 
 👉 Now start the server:
 
@@ -205,7 +208,7 @@ cd .. && rm -rf plugintest/
 
 ## Explore monorepos powered by git submodules and NPM workspaces
 
-Now we understand the basics of NPM workspaces, let's move up a level and add in the concept of [git submodules], which we can think of as a source code control system relation of NPM workspaces.
+Now we understand the basics of NPM workspaces, let's dig in further and add in the concept of [git submodules], which we can think of as a source code control system relation of NPM workspaces.
 
 With git submodules, not only can we organize packages in workspaces, but also manage their sources with git, and combine a project and its dependencies into a single repository called a "monorepo" (where "mono" is short for "monolithic", which itself means "single [usually large] stone").
 
@@ -217,17 +220,14 @@ The individual repository versions of CAP projects within the [cloud-cap-samples
 
 We'll create a top level project to be the "head" of the monorepo itself, and bring in individual CAP Node.js project repositories as git submodules, organizing them using the NPM workspace concept.
 
-👉 Do that now in the simplest possible way:
+👉 Do that now in the simplest possible way (from where you should be right now, which is back at `/workspaces/cap-local-development-workshop/`):
 
 ```bash
 mkdir capire \
   && cd $_ \
   && jq -n '{name: "@capire/samples", workspaces: ["*"]}' > package.json \
-  && git init \
-  && cat <<EOF > .gitignore
-node_modules
-gen
-EOF
+  && git init -b main \
+  && printf "node_modules\ngen\n" > .gitignore
 ```
 
 This is [the simplest thing that could possibly work] - a basic NPM project with just a name (in the form of a namespaced NPM package name) and a declaration allowing any subdirectory to be a workspace (that is, contain a dependent or related project package).
@@ -270,6 +270,12 @@ We can see that this depends on (amongst other things) other peer projects in th
   "express": "^4.17.1",
   "@cap-js/hana": ">=1"
 }
+```
+
+At this point we're ready to have dependencies installed, so do that now (while still within the project root `capire/` directory):
+
+```bash
+npm install
 ```
 
 👉 Now take a look at where packages have been installed:
@@ -326,15 +332,17 @@ node_modules/
 ...
 ```
 
-The dependencies to the various workspace project packages (`bookshop`, `bookstore`, etc) are realized ... via symbolic links.
+The dependencies to the various workspace project packages (`bookshop`, `bookstore`, etc) are realized ... _via symbolic links_.
 
 This is a great way to organize interdependent projects (such as those in composite applications or in microservices scenarios), especially in a local development context.
 
+👉 Keep this new `capire/` project setup as we'll use it in the next section.
+
 ## Produce and consume an event message
 
-At the end of the previous exercise we had seen what an event message looks like "in the pipe", i.e. in the file-based messaging channel, specifically in the default `~/.cds-msg-box` file.
+At the end of the previous exercise we had seen what an event message looks like "in the pipe", i.e. in the default `~/cds-msg-box` file in the context of the file-based messaging channel.
 
-To round out this exploration of monorepos powered by NPM workspaces and git submodules for local development, let's fire up a couple of the projects in our monorepo here, and have them communicate asynchronously.
+To round out this exploration of monorepos powered by NPM workspaces and git submodules for local development, let's fire up a couple of the projects in our monorepo here, and have them communicate asynchronously, also using the file-based messaging channel.
 
 ### Clean out any current in-flight event messages
 
@@ -352,7 +360,7 @@ rm ~/.cds-msg-box
 cds w reviews
 ```
 
-The "reviews" project provides a `ReviewsService` and also has a GUI served from the `app/` directory, available via the `/vue` link exposed on the start page; because of the setting in an `.env` file in the "reviews" project's root directory the CAP server listens on port 4005:
+The "reviews" project provides a `ReviewsService` and also has a GUI served from the `app/` directory, available via the `/vue` link exposed on the [start page]; because of the setting in an `.env` file in the "reviews" project's root directory the CAP server listens on port 4005:
 
 ![The start page for the "reviews" project, with one Web Application at /vue and one service endpoint at /reviews](assets/reviews-start-page.png)
 
@@ -366,7 +374,7 @@ and at this point the `~/.cds-msg-box` file is created anew.
 
 ### Add a review
 
-👉 In the GUI at <http://localhost:4005/vue/index.html>, add a review, and then check both the CAP server log, and the contents of the `~/.cds-msg-box` file.
+👉 In the GUI at <http://localhost:4005/vue/index.html> (you'll need to authenticate, use one of the [pre-defined test users] we learned about in a previous exercise, say, "bob"), add a review, and then check both the CAP server log, and the contents of the `~/.cds-msg-box` file.
 
 The log should show something like this:
 
@@ -385,10 +393,11 @@ This brings us to the stage that is the equivalent of where we were at the end o
 
 ### Examine the bookstore project and its requirements
 
-👉 In another terminal session, examine the "bookstore" project's CAP requirements, defined in `bookstore/package.json#cds.requires`:
+👉 In another terminal session, move into this new `capire/` project directory and examine the "bookstore" project's CAP requirements, defined in `bookstore/package.json#cds.requires`:
 
 ```bash
-jq .cds.requires bookstore/package.json
+cd capire/ \
+  && jq .cds.requires bookstore/package.json
 ```
 
 > We could of course use `cds env requires` from within the `bookstore/` directory too.
@@ -410,7 +419,7 @@ This shows us that amonst other things, the "bookstore" project relies upon (wil
 }
 ```
 
-Notice how the `model` references are specified, in NPM package form.
+Notice how the `model` references are specified, in NPM package name form.
 
 From an earlier exercise we know that the `~/.cds-services.json` file acts as a local binding registry, a sort of "stock exchange" for required and provided services.
 
@@ -505,3 +514,7 @@ Well done.
 [Microservices with CAP]: https://cap.cloud.sap/docs/guides/deployment/microservices
 [cloud-cap-samples]: https://github.com/SAP-samples/cloud-cap-samples
 [the simplest thing that could possibly work]: https://creators.spotify.com/pod/profile/tech-aloud/episodes/The-Simplest-Thing-that-Could-Possibly-Work--A-conversation-with-Ward-Cunningham--Part-V---Bill-Venners-e5dpts
+[npm-link]: https://docs.npmjs.com/cli/v9/commands/npm-link
+[special]: https://cap.cloud.sap/docs/node.js/cds-plugins#add-a-cds-plugin-js
+[start page]: http://localhost:4005/
+[pre-defined test users]: https://cap.cloud.sap/docs/node.js/authentication#mock-users
