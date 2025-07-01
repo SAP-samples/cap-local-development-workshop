@@ -26,7 +26,9 @@
     },
     "forwardPorts": [
         4004,
-        5005
+        4005,
+        5005,
+        9229
     ],
     "remoteUser": "node"
 }
