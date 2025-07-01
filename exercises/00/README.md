@@ -1,4 +1,4 @@
-# Exercise 00 - Setting up and getting to cds watch
+# Exercise 00 - Setting up and getting to a running server
 
 This workshop is all about local development, but we want to ensure that everyone has the same experience regardless of the machine, operating system and admin rights to install software. So there are different options you can take to set up and get ready to run through the exercises.
 
@@ -10,18 +10,22 @@ Once you've got everything set up, you'll finish this exercise by initializing a
 
 ## Set up working environment
 
-Here are the options. Choose one of them, and then jump forward to the [check the CAP Node.js version](#check-cap-nodejs-version) section.
+Here are the options.
+
+👉 Choose one of them, work through the steps, and then jump forward to continue on from the [check the CAP Node.js version](#check-cap-nodejs-version) section.
 
 ### Option 1 - dev container and VS Code installed locally
 
-If you already have or can install Docker Desktop and VS Code on your machine, then this option may be for you.
+If you already have or can install git, Docker Desktop and VS Code on your machine, then this option may be for you.
 
-- Ensure Docker Desktop is running
-- Check that you have the [Dev Containers] extension installed in VS Code.
-- Clone this repo `git clone https://github.com/SAP-samples/cap-local-development-workshop`.
-- Open the directory containing the clone with VS Code, for example like this: `code cap-local-development-workshop`, or via the VS Code menu.
+- Ensure Docker Desktop is running (and if you have a context set, ensure it points to the local engine)
+- Check that you have the [Dev Containers] extension installed in VS Code
+- Clone this repo `git clone https://github.com/SAP-samples/cap-local-development-workshop`
+- Open the directory containing the clone with VS Code, for example like this: `code cap-local-development-workshop`, or via the VS Code menu
 - Choose to "Reopen in Container" when asked:
   ![reopen in container dialogue box](assets/vscode-reopen-in-container.png)
+
+> There's no reason why e.g. [Podman] won't work instead of Docker; you're welcome to use that, but we cannot provide support for any issues arising in this workshop due to time constraints.
 
 ### Option 2 - dev container in a GitHub codespace
 
@@ -31,7 +35,7 @@ For our purposes, [GitHub codespaces] are essentially the same as a locally runn
 - Select the "Codespaces" tab.
 - Choose to "Create codespace on main":
   ![github-create-codespace](assets/github-create-codespace.png)
-- When the codespace is ready (in another browser tab), you're all set.
+- When the codespace is ready (in another browser tab), you're all set
 
 ### Option 3 - dev space in SAP Business Application Studio
 
@@ -135,9 +139,9 @@ cds serve all --with-mocks --in-memory?
 
 Here are a few things to notice, given that by default we're in development mode here (i.e. we haven't specified "production" mode):
 
-- the CDS model that is loaded is made up of content from various sources
-- by default there's a SQLite-powered in-memory database in play
-- there has been some initial data loaded into various entities
+- the CDS model that is loaded is made up of content from different sources
+- by default there's a SQLite powered in-memory database in play
+- there has been some initial data loaded for various entities
 - mock authentication is used automatically
 - two services are made available, via the OData adapter, and there are custom implementations for each of them
 
@@ -152,3 +156,4 @@ Here are a few things to notice, given that by default we're in development mode
 [SAP BTP trial landing page]: https://account.hanatrial.ondemand.com/trial/#/home/trial
 [facet]: https://cap.cloud.sap/docs/tools/cds-cli#cds-add
 [Capire entry for it]: https://cap.cloud.sap/docs/tools/cds-cli#cds-watch
+[Podman]: https://podman.io/

@@ -1,6 +1,6 @@
 # Exercise 02 - configuration profiles, more on initial data, and the cds REPL
 
-The [profile] concept is a great way to organize different collections of configuration. There are some built-in profiles named "production", "development" and (in one particular context) "hybrid" but we are free to use profiles in whatever way we choose. They can help us manage our local development in many ways; in this exercise we'll extend our look at initial data and use that to explore profiles. We'll also take a first look at the cds REPL.
+The [profile] concept is a great way to organize different collections of configuration. There are some built-in profiles named "production", "development" and (in one particular context) "hybrid" but we are otherwise free to use profiles in whatever way we choose. They can help us manage our local development in many ways; in this exercise we'll extend our look at initial data and use that to explore profiles. We'll also take a first look at the cds REPL.
 
 > Throughout this exercise keep the `cds watch` process running and in its own terminal instance; if necessary, open a second terminal to run any other commands you need, so you've always got the `cds watch` process running and visible.
 
@@ -22,7 +22,9 @@ test/
     └── Ex01Service.Sales.csv
 ```
 
-and the `package.json#cds.requires.db` section, reflecting the persistent file `db.sqlite`, looks like this:
+> You can generate this with `tree db/ test/`.
+
+and the `package.json#cds.requires.db` section, implicitly reflecting the persistent file `db.sqlite`, looks like this:
 
 ```json
   "cds": {
@@ -43,7 +45,7 @@ rm -rf test/ \
   && cds deploy
 ```
 
-Now we should switch back to in-memory, mostly so we can more comfortably and immediately see the effects of what we're going to do in this next section (if the database is in-memory then a deployment is done each and every time the server restarts, which makes sense when you think about it).
+Now we should switch back to in-memory, mostly so we can more comfortably and immediately see the effects of what we're going to do in this next section.
 
 There are different ways we can switch back to in-memory. Here are a few:
 
@@ -87,7 +89,7 @@ This reminds us that data is being loaded from CSV files in `db/data/`, accordin
 
 Sometimes it's useful to maintain and use different starting sets of initial data. You can manage this with the combination of convention (the mechanism looks for `data/` directories directly within the `db/`, `srv/` and `app/` directories and any other referenced locations) and the [profile] concept. Let's try this out.
 
-OK. The name of the `data/` directory is special (see [footnote-1](#footnote-1)), and its relative location is also special; if we move it to somewhere else, the files containing the initial data won't get picked up automatically.
+OK. The name of the `data/` directory is special (see [footnote 1](#footnote-1)), and its relative location is also special; if we move it to somewhere else, the files containing the initial data won't get picked up automatically.
 
 👉 Let's try that now:
 
@@ -134,7 +136,7 @@ touch db/classics/index.cds
 cds w --profile classics
 ```
 
-Lo and behold, the initial data in the CSV files in `db/classics/data/` is now loaded!
+[Lo and behold], the initial data in the CSV files in `db/classics/data/` is now loaded!
 
 ```log
   > init from db/classics/data/sap.capire.bookshop-Genres.csv
@@ -151,11 +153,11 @@ To illustrate this technique more fully, let's add a second initial data collect
 
 ```bash
 mkdir -p db/hitchhikers/data/ \
-  && cp ../exercises/01/assets/data/json/* "$_" \
+  && cp ../exercises/02/assets/data/json/* "$_" \
   && touch db/hitchhikers/index.cds
 ```
 
-> Note that this time, just to illustrate the possibility, the data files are JSON not CSV. This works too, but JSON files are only supported in development mode.
+> Note that this time, just to illustrate the possibility, the data files are JSON not CSV. This works too, but JSON files are only supported in development mode. See [footnote 2](#footnote-2) for why JSON might be a useful choice sometimes.
 
 At this point the `db/` directory should look like this:
 
@@ -239,38 +241,14 @@ The Restaurant at the End of the Universe
 Life, the Universe and Everything
 So Long, and Thanks for All the Fish
 Mostly Harmless
-And Another Thing... (novel)
+And Another Thing...
 ```
-
-### Combine the features
-
-You can combine this feature with the ability to configure file based persistence in `cds.requires` too.
-
-👉 Add the SQLite persistence info to the "hitchhikers" configuration:
-
-```json
-      "[hitchhikers]": {
-        "initdata": {
-          "model": "db/hitchhikers/"
-        },
-        "db": {
-          "kind": "sqlite",
-          "credentials": {
-            "url": "hitchhikers.db"
-          }
-        }
-      }
-```
-
-Having that `db` entry within the `[hitchhikers]` profile entry will override the "profile-independent" values (whether they're implicit or explicit) when the "hitchhikers" profile is specified via the `--profile` option on relevant `cds` commands.
-
-Feel free to explore this combination if you have time!
-
-<!-- TODO: use cds REPL to dig into the data, using some of the https://cap.cloud.sap/docs/guides/databases-sqlite#path-expressions-filters features -->
 
 ## Use the cds REPL to explore path expression features with SQLite
 
 Using SQLite for local development doesn't mean sacrificing database features. The new database services, including the one for SQLite, offer a common set of [features] including all kinds of [path expressions & filters]. This is a good opportunity to try some of these out, directly, interactively, with the [cds REPL].
+
+<!-- TODO: this shouldn't be needed any more - see https://github.tools.sap/cap/cds-dk/pull/3617 -->
 
 Before we continue, we need to add the [@cap-js/cds-test] package, which will make it easy for us to have the REPL start CAP servers for us. Add it now as a local development dependency:
 
@@ -487,6 +465,17 @@ There's plenty more to explore - see the links in the [Further reading](#further
 
 The name can also be `csv/` which is also "special".
 
+<a name="footnote-2"></a>
+### Footnote 2
+
+JSON may be a useful choice for the format of initial data if you're creating it for a mocked version of an external service where the representations of data are also in JSON, such as OData entitysets. Fetching the [Products] entityset from the [Northbreeze] service provides a JSON representation where the data that would go in such a file is at the `value` property, so you could do something as simple as this:
+
+```bash
+curl -s https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze/Products \
+  | jq .value \
+  > sap.capire.northbreeze-Products.json
+```
+
 [profile]: https://cap.cloud.sap/docs/node.js/cds-env#profiles
 [Hitchhiker's Guide To The Galaxy]: https://en.wikipedia.org/wiki/The_Hitchhiker%27s_Guide_to_the_Galaxy
 [Deploy to a persistent file]: ../01/README.md#deploy-to-a-persistent-file
@@ -500,3 +489,6 @@ The name can also be `csv/` which is also "special".
 [defined our `Ex01Service` in the simplest way]: ../01/README.md#add-a-new-service-definition
 [CQL]: https://cap.cloud.sap/docs/cds/cql
 [stare at]: https://qmacro.org/blog/posts/2017/02/19/the-beauty-of-recursion-and-list-machinery/#initial-recognition
+[Lo and behold]: https://en.wikipedia.org/wiki/Lo_and_Behold
+[Products]: https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze/Products
+[Northbreeze]: https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze
