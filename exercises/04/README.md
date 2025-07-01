@@ -68,7 +68,7 @@ This is a simple example of in-process eventing - emission, transmission, receip
 
 ## Explore file-based messaging
 
-This is what our Ex01Service definition looks like right now:
+This is what our Ex01Service definition looks like right now, from `srv/ex01-service.cds`:
 
 ```cds
 using { sap.capire.bookshop as my } from '../db/schema';
@@ -83,23 +83,38 @@ annotate Ex01Service.Books with @restrict: [
 ];
 ```
 
-We'll define an event and emit it.
+and `srv/ex01-sales.cds`:
+
+```cds
+using { cuid } from '@sap/cds/common';
+using { Ex01Service } from './ex01-service';
+
+extend service Ex01Service with {
+  entity Sales : cuid {
+    date: Date;
+    book: Association to Ex01Service.Books;
+    quantity: Integer;
+  }
+}
+```
+
+Let's define an event, and emit it.
 
 ### Switch the classics data back to the default development profile
 
 Before we start, and to keep things simple, let's switch back the authors, books and genres data from within the classics profile back to the default, i.e. let's move:
 
 ```text
-db
-├── classics
-│   ├── data
+db/
+├── classics/
+│   ├── data/
 │   │   ├── sap.capire.bookshop-Authors.csv
 │   │   ├── sap.capire.bookshop-Books.csv
 │   │   ├── sap.capire.bookshop-Books_texts.csv
 │   │   └── sap.capire.bookshop-Genres.csv
 │   └── index.cds
-├── hitchhikers
-│   ├── data
+├── hitchhikers/
+│   ├── data/
 │   │   ├── sap.capire.bookshop-Authors.json
 │   │   └── sap.capire.bookshop-Books.json
 │   └── index.cds
@@ -109,14 +124,14 @@ db
 to be:
 
 ```text
-db
-├── data
+db/
+├── data/
 │   ├── sap.capire.bookshop-Authors.csv
 │   ├── sap.capire.bookshop-Books.csv
 │   ├── sap.capire.bookshop-Books_texts.csv
 │   └── sap.capire.bookshop-Genres.csv
-├── hitchhikers
-│   ├── data
+├── hitchhikers/
+│   ├── data/
 │   │   ├── sap.capire.bookshop-Authors.json
 │   │   └── sap.capire.bookshop-Books.json
 │   └── index.cds
@@ -129,7 +144,7 @@ db
 mv db/classics/data/ db/ && rm -rf db/classics/
 ```
 
-👉 Also, to keep things clean, remove the corresponding entry in `package.json#cds.requires`:
+👉 Also, to keep things clean, remove the corresponding entry in `package.json#cds.requires`, and stay in the file as we'll be adding something in the next part:
 
 ```text
   "cds": {
@@ -158,9 +173,7 @@ mv db/classics/data/ db/ && rm -rf db/classics/
   }
 ```
 
-👉 Remain in this file as you'll be adding something in the next part.
-
-### Declare a requirement for file-based-messaging
+### Declare a requirement for file-based messaging
 
 OK, the first thing we need to do is define a requirement for messaging. And for our local development scenario, we should use file-based messaging, which is the default.
 
@@ -203,7 +216,7 @@ OK, the first thing we need to do is define a requirement for messaging. And for
 
 In the previous exercise we created the "milton" user and gave them the "backoffice" role which allowed them to perform `WRITE` semantic operations on books. Let's define an event that should be emitted when a book is deleted.
 
-👉 First, declare that by adding a [custom event definition] "bookremoved" to the service, next to the `entity` definition for `Books`:
+👉 First, declare that by adding a [custom event definition] "bookremoved" to the service, next to the `entity` definition for `Books` in `srv/ex01-service.cds`:
 
 ```cds
 ...
@@ -214,11 +227,11 @@ In the previous exercise we created the "milton" user and gave them the "backoff
 ...
 ```
 
-The type structure (`{ ... }`) is deliberately as simple as possible for this example, designed to convey just the ID of the book that was removed.
+The type structure (`{ ... }`) is deliberately as compact as possible for this example, designed to convey just the ID of the book that was removed.
 
 ### Add handler code to emit the event
 
-Now it's time to define when and how that event should be emitted. Let's start simple.
+Now it's time to define when and how that event should be emitted. Let's start simple, with a temporary `console.log` statement.
 
 👉 Create `srv/ex01-service.js` with the following content:
 
@@ -261,7 +274,13 @@ our new custom implementation is now in play for the Ex01Service:
 [cds] - serving Ex01Service { impl: 'srv/ex01-service.js', path: '/ex01' }
 ```
 
-👉 In another terminal session, delete "The Raven":
+While we're looking at the log output from the CAP server, we can also see that the "file-based-messaging" channel is active, owing to the `messaging` entry we added to `package.json#cds.requires`:
+
+```log
+[cds] - connect to messaging > file-based-messaging
+```
+
+👉 Now, in another terminal session, delete "The Raven":
 
 ```bash
 curl -X DELETE -u milton:dontmovemydesk localhost:4004/ex01/Books/251
@@ -296,7 +315,7 @@ The message channel we're using here for this local context is [file-based messa
 
 > If a CAP file is in your home directory, it's a big clue that it's for local development only.
 
-👉 In a separate terminal session, ensure the file exists (it likely doesn't at this stage as we haven't emitted any messages yet), and start monitoring the file's contents:
+👉 In a separate terminal session, ensure the file exists and start monitoring the contents:
 
 ```bash
 touch ~/.cds-msg-box \

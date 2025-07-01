@@ -348,7 +348,7 @@ from cds.services: {
 Simply type e.g. Ex01Service in the prompt to use the respective objects.
 ```
 
-We [defined our `Ex01Service` in the simplest way], but we can see in the REPL that there are already plenty of handlers attached.
+We [defined our Ex01Service in the simplest way], but we can see in the REPL that there are already plenty of handlers attached.
 
 👉 Have a look at them with `.inspect Ex01Service.handlers`:
 
