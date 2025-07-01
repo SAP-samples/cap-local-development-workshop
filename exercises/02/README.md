@@ -468,7 +468,7 @@ The name can also be `csv/` which is also "special".
 <a name="footnote-2"></a>
 ### Footnote 2
 
-JSON may be a useful choice for the format of initial data if you're creating it for a mocked version of an external service where the representations of data are also in JSON, such as OData entitysets. Fetching the [Products] entityset from the [Northbreeze] service provides a JSON representation where the data that would go in such a file is at the `value` property, so you could do something as simple as this:
+JSON may be a useful choice for the format of initial data if you're creating it for a mocked version of an external service where the representations of data are also in JSON, such as OData entitysets. In fact we'll be doing exactly this in the next exercise.
 
 ```bash
 curl -s https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze/Products \
@@ -490,5 +490,3 @@ curl -s https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/north
 [CQL]: https://cap.cloud.sap/docs/cds/cql
 [stare at]: https://qmacro.org/blog/posts/2017/02/19/the-beauty-of-recursion-and-list-machinery/#initial-recognition
 [Lo and behold]: https://en.wikipedia.org/wiki/Lo_and_Behold
-[Products]: https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze/Products
-[Northbreeze]: https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze

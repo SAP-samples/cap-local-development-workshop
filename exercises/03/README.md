@@ -25,7 +25,7 @@ and observe this output:
 }
 ```
 
-The "mocked" [authentication strategy] uses HTTP Basic Authentication (simple usernames and passwords) combined with [assignment of sample roles to pre-defined test users]. It's more or less the same as the "basic" authentication strategy, but with this user and role pre-configuration.
+The "mocked" [authentication strategy] uses HTTP Basic Authentication (simple usernames and passwords) combined with assignment of sample roles to [pre-defined test users]. It's more or less the same as the "basic" authentication strategy (as we can see from the implementation file in the log output), but with this set of users and roles pre-configured.
 
 ### Try accessing AdminService resources
 
@@ -66,7 +66,7 @@ As authorization checks (in play here) are predicated on verified identity claim
 
 #### Attempt a request authenticated as a user without the requisite role
 
-👉 Try authenticating with the pre-defined user "yves", who has the role "internal-user":
+👉 Try authenticating with the pre-defined user "yves", who has the role "internal-user" (see the [pre-defined test users]):
 
 ```bash
 curl -i -u 'yves:' localhost:4004/odata/v4/admin/Books
@@ -154,15 +154,15 @@ annotate Ex01Service with @requires: 'authenticated-user';
 annotate Ex01Service.Books with @restrict: [
   { grant: 'READ' },
   { grant: 'WRITE', to: 'backoffice' }
-]);
+];
 ```
 
 These annotations set up:
 
 - a requirement that any request to the service be authenticated (i.e. made with a verified identity)
-- a restriction on the `Books` entity in that any authenticated user can perform read operations, but only users with the "backoffice" role can perform write operations
+- a restriction on the `Books` entity in that any (authenticated) user can perform read operations, but only users with the "backoffice" role can perform write operations
 
-> If you're wondering about `@(requires: ...)` vs `@requires: ...`, see the link to the "Expressing multiple annotations with @(...)" section of a blog post on OData and CDS annotations in the [Further reading] section below.
+> If you're wondering about `@(requires: ...)` vs `@requires: ...`, see the link to the "Expressing multiple annotations with @(...)" section of a blog post on OData and CDS annotations in the [Further reading](#further-reading) section below.
 
 #### Make an unauthenticated request
 
@@ -326,7 +326,7 @@ See the [Further reading](#further-reading) section for more information.
 
 Working locally doesn't mean that we need to avoid development that involves remote services. A remote service API definition can be downloaded and imported, so that it becomes known to the CAP server (as a "required" service, rather than a "provided" service), and via the translation of the API definition to an internal model representation in Core Schema Notation [CSN] it can also be given active behavior and even test data.
 
-Everyone loves Northwind (don't they?) so let's use a cut-down version of Northwind, called Northbreeze, which is available as an OData v4 service at <https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze>
+Everyone loves Northwind (don't they?) so let's use a cut-down version of Northwind, called Northbreeze, which is available as an OData v4 service at <https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze>.
 
 ### Import the API definition
 
@@ -358,13 +358,13 @@ using { northbreeze as external } from './external/northbreeze'
 👉 Let's have a look at where the imported CSN is, in relation to other content in `srv/`:
 
 ```bash
-tree srv
+tree srv/
 ```
 
 We can see that the default location that `cds import` uses makes a lot of sense, in that it's a service, but not part of our own overall CDS model:
 
 ```log
-srv
+srv/
 ├── admin-service.cds
 ├── admin-service.js
 ├── cat-service.cds
@@ -480,7 +480,7 @@ mkdir srv/external/data/ \
   && cds add data \
     --filter Suppliers \
     --records 5 \
-    --out srv/external/data/
+    --out srv/external/data/ \
   && cds mock northbreeze --port 5005
 ```
 
@@ -532,13 +532,13 @@ But we can do better. Why not grab and store some "real" data from the actual se
 
 > Remember that the monitor-and-auto-restart feature comes with `cds watch`, not `cds mock`; that's why we're stopping and starting the `cds mock` server.
 
-👉 Now, remove the CSV file we just generated:
+👉 Now, remove the CSV data we just generated:
 
 ```bash
-rm srv/external/data/northbreeze-Suppliers.csv
+rm srv/external/data/*.csv
 ```
 
-👉 Now retrieve the entitysets and put the data into files in that `srv/external/data/` directory:
+👉 Now retrieve the entityset resources (in their default JSON representation) and put the data into JSON files in that `srv/external/data/` directory:
 
 ```bash
 for entity in Products Suppliers Categories; do
@@ -621,7 +621,9 @@ Great! Now we have a fully mocked external service complete with real data.
 
 If you have time, you can build on your confidence with an interactive REPL context by connecting to this mocked remote service from within the cds REPL.
 
-👉 First, let's have a look at the "wiring" for this mocked remote service in our local development mode context; take a peek in the `.cds-services.json` file in your home directory:
+👉 First, make sure the mock service is still running and listening on port 5005 (i.e. you haven't stopped it just now).
+
+👉 Now, let's have a look at the "wiring" for this mocked remote service in our local development mode context; take a peek in the `.cds-services.json` file in your home directory:
 
 ```bash
 jq . ~/.cds-services.json
@@ -652,6 +654,12 @@ This is a file that the CAP server runtime uses in local development mode to dec
 ```
 
 We can see from this that any local CAP server requiring the "northbreeze" service knows that it's available, and how to reach it (via the `credentials.url` property).
+
+👉 CAP makes use of the [SAP Cloud SDK] for management of destination information about, and connectivity to, remote services. So before we continue at this point, let's add the SDK packages:
+
+```bash
+npm add @sap-cloud-sdk/http-client@4
+```
 
 👉 Now start the cds REPL:
 
@@ -759,7 +767,7 @@ Excellent! It's worth pausing for a second to take this in:
 We are going to be mocking in a separate CAP server process, for a more realistic scenario, albeit still local. It is also possible to use in-process mocking, where the same single CAP server provides services and also mocks the required services, but we won't be covering that here. See [Run local with mocks] in Capire for more info.
 
 [authentication strategy]: https://cap.cloud.sap/docs/node.js/authentication#strategies
-[assignment of sample roles to pre-defined test users]: https://cap.cloud.sap/docs/node.js/authentication#mock-users
+[pre-defined test users]: https://cap.cloud.sap/docs/node.js/authentication#mock-users
 [@requires]: https://cap.cloud.sap/docs/guides/security/authorization#requires
 [Authentication]: https://cap.cloud.sap/docs/node.js/authentication
 [CDS-based Authorization]: https://cap.cloud.sap/docs/guides/security/authorization
@@ -778,3 +786,4 @@ We are going to be mocking in a separate CAP server process, for a more realisti
 [Expressing multiple annotations with @(...)]: https://qmacro.org/blog/posts/2023/03/10/a-deep-dive-into-odata-and-cds-annotations/#expressing-multiple-annotations-with-
 [remind you of something]: https://sap.github.io/cloud-sdk/docs/js/features/connectivity/destinations
 [Run local with mocks]: https://cap.cloud.sap/docs/guides/using-services#run-local-with-mocks
+[SAP Cloud SDK]: https://sap.github.io/cloud-sdk/
