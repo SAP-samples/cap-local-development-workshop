@@ -28,12 +28,12 @@ There are other topics in Capire that also are relevant for local development, b
 - [cds add]
 - [serving UIs]
 
-[hybrid testing]: (https://cap.cloud.sap/docs/advanced/hybrid-testing)
-[configuration profiles]: (https://cap.cloud.sap/docs/node.js/cds-env#profiles)
-[SQLite]: (https://cap.cloud.sap/docs/guides/databases-sqlite)
-[initial data]: (https://cap.cloud.sap/docs/guides/databases#providing-initial-data)
-[cds watch]: (https://cap.cloud.sap/docs/tools/cds-cli#cds-watch)
-[cds REPL]: (https://cap.cloud.sap/docs/tools/cds-cli#cds-repl)
+[hybrid testing]: https://cap.cloud.sap/docs/advanced/hybrid-testing
+[configuration profiles]: https://cap.cloud.sap/docs/node.js/cds-env#profiles
+[SQLite]: https://cap.cloud.sap/docs/guides/databases-sqlite
+[initial data]: https://cap.cloud.sap/docs/guides/databases#providing-initial-data
+[cds watch]: https://cap.cloud.sap/docs/tools/cds-cli#cds-watch
+[cds REPL]: https://cap.cloud.sap/docs/tools/cds-cli#cds-repl
 [mock user authentication]: https://cap.cloud.sap/docs/guides/security/authorization#prerequisite-authentication
 [debugging remote applications]: https://cap.cloud.sap/docs/tools/cds-cli#remote-applications
 [mocking of required services]: https://cap.cloud.sap/docs/guides/using-services#mock-remote-service-as-odata-service-node-js
