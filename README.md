@@ -20,7 +20,7 @@ Work through each of the following exercises one at a time, each of which cover 
 
 ## Other topics
 
-There are other topics in Capire that also are relevant for local development, but not covered in this workshop:
+There are other topics in Capire that also are relevant for local development, but not covered in this workshop (except in passing):
 
 - [hybrid testing]
 - [linting]
