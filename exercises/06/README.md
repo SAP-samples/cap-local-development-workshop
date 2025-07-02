@@ -4,7 +4,7 @@ The [Debugging] section of Capire tells us that with `cds debug` we can "_debug 
 
 The benefit of using the same procedure and in fact the same debugging tools regardless of whether the CAP server is local or remote is enormous. We can use our local development tools and the same techniques, and while connected to a remote server we can still remain "local" in our minds.
 
-In this exercise we'll create a simple CAP project, run and debug it locally, then deploy it to Cloud Foundry, connect to it and debug it remotely.
+In this exercise we'll create a simple CAP project, run and debug it locally, then deploy it to Cloud Foundry (CF), connect to it and debug it remotely.
 
 ## Initialize a new CAP Node.js project
 
@@ -47,7 +47,7 @@ module.exports = cds.service.impl(function() {
 
 When debugging, we'll set a breakpoint on the `console.log(book)` line shortly.
 
-## Try out debugging locally
+## Debug locally
 
 We're already all set - it's straightforward.
 
@@ -155,6 +155,164 @@ book.title = "my test book 1"
 
 ![controls in the Inspector](assets/devtools-controls.png)
 
+## Push to Cloud Foundry
+
+Now we have done a little bit of debugging with a locally running CAP server, let's push it to CF so we can try out debugging a remotely deployed instance. We'll push it in the simplest possible way, keeping the machinery to a minimum and retaining the "local" nature of the server, to avoid getting distracted with making it production-ready.
+
+### Log in with the cf CLI
+
+We'll use the `cf` CLI to make the push to CF.
+
+👉 Use the credentials and API endpoint that you have been given in this workshop to log in.
+
+If you have an active trial account on the SAP Business Technology Platform (BTP), with a CF environment instance, then you can of course use that instead; the API endpoint is indicated in the CF environment section of your trial account overview in the cockpit, as shown here:
+
+![BTP trial account showing CF environment instance details](assets/btp-trial-cf-environment.png)
+
+You can use your SAP BTP trial account's username (email address) and password, but we recommend you use the `--sso` option to enable you to use your already signed-in status in the browser to get a code to authenticate with; the flow looks like this:
+
+```log
+; cf login -a https://api.cf.us10-001.hana.ondemand.com --sso
+API endpoint: https://api.cf.us10-001.hana.ondemand.com
+
+Temporary Authentication Code ( Get one at https://login.cf.us10-001.hana.ondemand.com/passcode ):
+Authenticating...
+OK
+
+
+Targeted org 013e7c57trial.
+
+Targeted space dev.
+
+API endpoint:   https://api.cf.us10-001.hana.ondemand.com
+API version:    3.194.0
+user:           dj.adams@sap.com
+org:            013e7c57trial
+space:          dev
+```
+
+### Push the app
+
+Once you're logged in, you can push the app. Let's do it in stages.
+
+> Notice the terminology change slightly here - while we've been talking and thinking about what we have here as a service, provided by a running CAP server, from a CF perspective though it's an "app" ... as opposed to a (backing) "service".
+
+👉 Determine your specific workshop identifier, which you'll be allocated and should use as a suffix to the app name on CF. The identifier will most likely be a number; in the following illustrations, we'll assume the identifier is `000`.
+
+👉 First, push the app using the most basic form, specifying that it shouldn't yet be started (because we have a few settings we want to make before that happens):
+
+```bash
+cf push debugtest-000 -m 256M --no-start
+```
+
+👉 Now set "non-production" values for a couple of the app's environment variables (so that we can avoid the "productive" requirements such as using a production-ready DB like SAP HANA, and avoid having to configure and wire up a connection to a real authorization service):
+
+```bash
+cf set-env debugtest-000 NPM_CONFIG_PRODUCTION false
+cf set-env debugtest-000 NODE_ENV testing
+```
+
+> See the link to NPM config in the [Further reading](#further-reading) section for more information.
+
+At this point we'd be ready to start the app up. But there's one thing we need to do specifically to be able to debug it.
+
+### Enable SSH for the app
+
+In order for us to connect to the app when it's being inspected, we need to be able connect remotely to the websocket. That connection is achieved by means of an [SSH tunnel], i.e. a connection carried through a secure (remote) shell (SSH) session.
+
+We need to ensure that we can make such SSH connections to the app, and CF allows [access to apps via SSH]. It's likely that SSH is by default not enabled for the app that we've just pushed; we can check, like this:
+
+```bash
+; cf ssh-enabled debugtest-000
+ssh support is disabled for app 'debugtest-000'.
+ssh is disabled for app
+```
+
+👉 So enable SSH for the app now, like this:
+
+```bash
+cf enable-ssh debugtest-000
+```
+
+This will emit something like this:
+
+```log
+Enabling ssh support for app debugtest-000 as dj.adams@sap.com...
+OK
+
+TIP: An app restart is required for the change to take effect.
+```
+
+We haven't yet started the app, so a start now will effect the SSH enablement too.
+
+### Start the app
+
+👉 Do that now, like this:
+
+```bash
+cf start debugtest-000
+```
+
+There's a lot of output that occurs, but as this exercise is not about CF, we'll just briefly show what you should see as a sign of success:
+
+```log
+Starting app debugtest-000 in org 013e7c57trial / space dev as dj.adams@sap.com...
+
+Waiting for app to start...
+
+Instances starting...
+
+name:                debugtest-000
+requested state:     started
+isolation segment:   trial
+routes:              debugtest-000.cfapps.us10-001.hana.ondemand.com
+last uploaded:       Wed 02 Jul 06:31:39 UTC 2025
+stack:               cflinuxfs4
+buildpacks:
+isolation segment:   trial
+        name               version   detect output   buildpack name
+        nodejs_buildpack   1.8.38    nodejs          nodejs
+
+type:           web
+sidecars:
+instances:      1/1
+memory usage:   256M
+     state     since                  cpu    memory     disk       logging        cpu entitlement   details
+#0   running   2025-07-02T06:31:53Z   0.0%   0B of 0B   0B of 0B   0B/s of 0B/s   0.0%
+```
+
+## Debug remotely
+
+The moment of truth has arrived.
+
+👉 Use the same `cds debug` command as earlier, but this time specify the app name:
+
+```bash
+cds debug debugtest-000
+```
+
+This time, the output is slightly different:
+
+```log
+Found process of type node, ID: 256
+
+Opening SSH tunnel on 9229:127.0.0.1:9229
+Opening Chrome DevTools at devtools://devtools/bundled/inspector.html?ws=localhost:9229/16af26a1-064e-4994-8b3a-97f29780e61e
+
+> Now attach a debugger to port 9229.
+> Keep this terminal open while debugging.
+> See https://cap.cloud.sap/docs/tools/cds-cli#cds-debug for more.
+...
+```
+
+You can see that an SSH tunnel has been established, with this description: `9229:127.0.0.1:9229`. This means that the `cds debug` mechanism has made an SSH connection to the app on CF, and used SSH's tunnel facility to create a tunnel, between port 9229 on the "local" host (that's the first `9229` in the description string) and port 9229, listening on 127.0.0.1 on the "remote" host (that's the `localhost:9229` in the description string). The upshot of this is that if a connection is made to "local" port 9229, it's forwarded through the tunnel to port 9229 on the "remote" host, which is the host where our debugtest app is running.
+
+This means that we can use our DevTools just like before, and connect just like before as well, as though the app being inspected were "local".
+
+Follow the same procedure as we did earlier in [Start a debugging client](#start-a-debugging-client) and debug just like you did before too.
+
+It's (almost) magic!
+
 ---
 
 ## Further reading
@@ -163,8 +321,12 @@ book.title = "my test book 1"
 - [Node.js debugging]
 - [Debugging JavaScript with Chrome DevTools]
 - [Method: srv.after(request)]
+- [NPM config]
 
 [Debugging]: https://cap.cloud.sap/docs/tools/cds-cli#cds-debug
 [Node.js debugging]: https://nodejs.org/en/learn/getting-started/debugging
 [Debugging JavaScript with Chrome DevTools]: https://developer.chrome.com/docs/devtools/javascript
 [Method: srv.after(request)]: https://cap.cloud.sap/docs/node.js/core-services#srv-after-request
+[NPM config]: https://docs.npmjs.com/cli/v9/using-npm/config
+[SSH tunnel]: https://www.ssh.com/academy/ssh/tunneling
+[access to apps via SSH]: https://docs.cloudfoundry.org/devguide/deploy-apps/ssh-apps.html
