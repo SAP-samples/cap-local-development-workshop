@@ -1,4 +1,4 @@
-# Exercise 00 - Setting up and getting to a running server
+# Exercise 00 - setting up and getting to a running server
 
 This workshop is all about local development, but we want to ensure that everyone has the same experience regardless of the machine, operating system and admin rights to install software. So there are different options you can take to set up and get ready to run through the exercises.
 
