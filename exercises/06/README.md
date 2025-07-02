@@ -17,7 +17,7 @@ cd /workspaces/cap-local-development-workshop/ \
   && cds init --add tiny-sample debugtest && cd $_
 ```
 
-The "tiny-sample" facet causes a super small books based service with a couple of data records, and it relies on the built-in service implementation as there are no JavaScript files alongside the service definition, as we can see:
+The "tiny-sample" facet brings in a super small books based service with a couple of data records, and it relies on the built-in service implementation as there are no JavaScript files alongside the service definition, as we can see:
 
 ```bash
 ; tree
@@ -82,7 +82,7 @@ The difference is that the Node.js process has been started with the `--inspect`
 
 Note the websocket address given: `ws://127.0.0.1:9229/<process-guid>`.
 
-That port 9229 is the default for Node.js debugging connections; let's see for ourselves that it's listening for connections:
+👉 That port 9229 is the default for Node.js debugging connections; let's see for ourselves, in another terminal session, that it's listening for connections:
 
 ```bash
 netstat -atn | grep LISTEN
@@ -131,9 +131,9 @@ You should also be presented with an Inspector window that, if you've used DevTo
 
 👉 Initially your window may not look like what you see in this screenshot; follow these steps to get there:
 
-- In the "Scripts" section (top left), drill down the `file://` tree to find and `cat-services.js`.
+- In the "Scripts" section (top left), drill down the `file://` tree to find and select `cat-services.js`.
 - Once the `cat-services.js` content is displayed, select the `console.log` line with the line number to set a breakpoint there (this is indicated with the blue arrow).
-- Press the Esc key to bring up the Console drawer in the bottom half, where you'll see the CAP server log output, and also have a prompt (`> `) which is a bit like a REPL situation.
+- Press the Esc key to bring up the Console drawer in the bottom half, where you'll see the CAP server log output, and also have a prompt (`>`) which is effectively a regular DevTools console but in the context of the running process being debugged.
 
 ### Make a request for the books data
 
@@ -143,13 +143,17 @@ Beyond having an inspector attachment, the CAP server is otherwise running norma
 
 The response will not immediately be returned, as the processing should have paused at the breakpoint.
 
-Switch over to the Inspector and explore; if you're stuck for something to do, use the prompt in the Console to change the title of the book(s) being returned, with e.g.:
+👉 Switch over to the Inspector and explore; if you're stuck for something to do, use the prompt in the Console to change the title of the book(s) being returned, with e.g.:
 
 ```javascript
-book = "my test book 1"
+book.title = "my test book 1"
 ```
 
 > Note that this is in the context of a handler in the "after" phase, specifically with the special "each" event, so the breakpoint will be visited twice, once for each book record being served. See the link in the [Further reading](#further-reading) section below for more on this.
+
+👉 Use the controls in the Inspector to control the debugging flow:
+
+![controls in the Inspector](assets/devtools-controls.png)
 
 ---
 
@@ -159,7 +163,6 @@ book = "my test book 1"
 - [Node.js debugging]
 - [Debugging JavaScript with Chrome DevTools]
 - [Method: srv.after(request)]
-
 
 [Debugging]: https://cap.cloud.sap/docs/tools/cds-cli#cds-debug
 [Node.js debugging]: https://nodejs.org/en/learn/getting-started/debugging
