@@ -16,16 +16,23 @@ Here are the options.
 
 ### Option 1 - dev container and VS Code installed locally
 
-If you already have or can install git, Docker Desktop and VS Code on your machine, then this option may be for you.
+If you already have or can install git, Docker Desktop (see [footnote 1](#footnote-1)) and VS Code on your machine, then this option may be for you.
 
-- Ensure Docker Desktop is running (and if you have a context set, ensure it points to the local engine)
+- Ensure Docker Desktop is running (and if you have a context set, ensure it points to the local engine) (see
 - Check that you have the [Dev Containers] extension installed in VS Code
 - Clone this repo `git clone https://github.com/SAP-samples/cap-local-development-workshop`
 - Open the directory containing the clone with VS Code, for example like this: `code cap-local-development-workshop`, or via the VS Code menu
 - Choose to "Reopen in Container" when asked:
   ![reopen in container dialogue box](assets/vscode-reopen-in-container.png)
 
-> There's no reason why e.g. [Podman] won't work instead of Docker; you're welcome to use that, but we cannot provide support for any issues arising in this workshop due to time constraints.
+Then, so that everyone's working location is the same in all of the explicit options here:
+
+- Open a terminal and create a symbolic link so that the cloned repository is (also, virtually) in the `$HOME/projects/` directory:
+
+  ```bash
+  cd $HOME/projects/ \
+    && ln -s /workspaces/cap-local-development-workshop .
+  ```
 
 ### Option 2 - dev container in a GitHub codespace
 
@@ -52,8 +59,6 @@ This option is very much similar to the previous two options, in that it provide
 Once you have your working environment set up, check that CAP Node.js is installed (it should be) by opening up a terminal (menu option "Terminal -> New Terminal") and running `cds v`. The version for `@sap/cds-dk` should be [9.0.0+]. Here's an example from a terminal prompt from Option 1, but regardless of the option you chose, it should look similar:
 
 ![running cds v in a terminal prompt](assets/vscode-shell-cds-version.png)
-
-<!-- TODO: BAS dev spaces are still on CAP Node.js 8 - check in July -->
 
 ## Create new CAP Node.js project
 
@@ -150,6 +155,15 @@ Here are a few things to notice, given that by default we're in development mode
 ---
 
 [Next exercise](../01)
+
+---
+
+## Footnotes
+
+<a name="footnote-1"></a>
+### Footnote 1
+
+There's no reason why e.g. [Podman] won't work instead of Docker; you're welcome to use that, but we cannot provide support for any issues arising in this workshop due to time constraints.
 
 [GitHub codespaces]: https://github.com/features/codespaces
 [9.0.0+]: https://cap.cloud.sap/docs/releases/may25
