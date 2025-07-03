@@ -31,7 +31,8 @@ Then, so that everyone's working location is the same in all of the explicit opt
 
   ```bash
   cd $HOME/projects/ \
-    && ln -s /workspaces/cap-local-development-workshop .
+    && ln -s /workspaces/cap-local-development-workshop . \
+    && cd cap-local-development-workshop
   ```
 
 ### Option 2 - dev container in a GitHub codespace
