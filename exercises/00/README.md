@@ -147,6 +147,10 @@ Here are a few things to notice, given that by default we're in development mode
 
 > From hereon in, any commands entered in subsequent exercises should be entered in the context of where we are right now, which is in this project's root, i.e. the `myproj/` directory ... unless otherwise stated.
 
+---
+
+[Next exercise](../01)
+
 [GitHub codespaces]: https://github.com/features/codespaces
 [9.0.0+]: https://cap.cloud.sap/docs/releases/may25
 [Dev Containers]: https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers

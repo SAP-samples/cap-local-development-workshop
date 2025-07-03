@@ -504,6 +504,12 @@ Well done.
 - [Reusable components for CAP with cds-plugin]
 - [Microservices with CAP]
 
+---
+
+[Next exercise](../06)
+
+---
+
 [No man is an island]: https://allpoetry.com/No-man-is-an-island
 [workspaces]: https://docs.npmjs.com/cli/v7/using-npm/workspaces
 [CDS plugin packages]: https://cap.cloud.sap/docs/node.js/cds-plugins

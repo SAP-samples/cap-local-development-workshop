@@ -458,6 +458,12 @@ There's plenty more to explore - see the links in the [Further reading](#further
 - [Level up your CAP skills by learning how to use the cds REPL](https://qmacro.org/blog/posts/2025/03/21/level-up-your-cap-skills-by-learning-how-to-use-the-cds-repl/)
 - [The Art and Science of CAP](https://qmacro.org/blog/posts/2024/12/06/the-art-and-science-of-cap/)
 
+---
+
+[Next exercise](../03)
+
+---
+
 ## Footnotes
 
 <a name="footnote-1"></a>

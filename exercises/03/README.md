@@ -759,6 +759,10 @@ Excellent! It's worth pausing for a second to take this in:
 
 ---
 
+[Next exercise](../04)
+
+---
+
 ## Footnotes
 
 <a name="footnote-1"></a>

@@ -356,6 +356,12 @@ But what happens now? How do we receive such a message? We'll find out with a mo
 
 - [Level up your CAP skills by learning how to use the cds REPL]
 
+---
+
+[Next exercise](../05)
+
+---
+
 [The Art and Science of CAP]: https://qmacro.org/blog/posts/2024/12/06/the-art-and-science-of-cap/
 [Everything is a service]: https://qmacro.org/blog/posts/2024/12/10/tasc-notes-part-4/#everything-is-a-service
 [Everything is an event]: https://qmacro.org/blog/posts/2024/11/07/five-reasons-to-use-cap/#:~:text=Everything%20is%20an%20event

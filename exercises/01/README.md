@@ -543,6 +543,10 @@ That's the end of this exercise!
 
 ---
 
+[Next exercise](../02)
+
+---
+
 ## Footnotes
 
 <a name="footnote-1"></a>
