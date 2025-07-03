@@ -451,6 +451,8 @@ It should return the books from the two Brontë sisters:
 
 There's plenty more to explore - see the links in the [Further reading](#further-reading) section below.
 
+👉 When you're done, exit the REPL.
+
 ---
 
 ## Further reading

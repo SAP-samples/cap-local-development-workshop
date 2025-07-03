@@ -358,13 +358,13 @@ using { northbreeze as external } from './external/northbreeze'
 👉 Let's have a look at where the imported CSN is, in relation to other content in `srv/`:
 
 ```bash
-tree srv/
+tree srv
 ```
 
 We can see that the default location that `cds import` uses makes a lot of sense, in that it's a service, but not part of our own overall CDS model:
 
 ```log
-srv/
+srv
 ├── admin-service.cds
 ├── admin-service.js
 ├── cat-service.cds
@@ -458,7 +458,7 @@ But there's no data right now, as illustrated with simple request like this:
 The sensible place to put data is "next to" the model definition for this external service, which means here:
 
 ```text
-srv/
+srv
 ├── admin-service.cds
 ├── admin-service.js
 ├── cat-service.cds
@@ -562,8 +562,8 @@ Categories: 8
 
 and the creation of the corresponding files, this time in JSON format:
 
-```
-srv/
+```text
+srv
 ├── admin-service.cds
 ├── admin-service.js
 ├── cat-service.cds
@@ -791,3 +791,4 @@ We are going to be mocking in a separate CAP server process, for a more realisti
 [remind you of something]: https://sap.github.io/cloud-sdk/docs/js/features/connectivity/destinations
 [Run local with mocks]: https://cap.cloud.sap/docs/guides/using-services#run-local-with-mocks
 [SAP Cloud SDK]: https://sap.github.io/cloud-sdk/
+[stapler guy]: https://en.wikipedia.org/wiki/Office_Space#Red_stapler
