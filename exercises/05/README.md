@@ -15,7 +15,7 @@ CAP Node.js typically uses the workspace concept for the development of [CDS plu
 👉 In a new terminal session window, initialize a new CAP Node.js project "plugintest" in the workshop root directory:
 
 ```bash
-cd /workspaces/cap-local-development-workshop/ \
+cd $HOME/projects/cap-local-development-workshop/ \
   && cds init plugintest && cd $_
 ```
 

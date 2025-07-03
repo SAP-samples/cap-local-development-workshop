@@ -13,7 +13,7 @@ For this topic we'll limit ourselves to a simple CAP service.
 👉 In a new terminal session window, initialize a new CAP Node.js project "debugtest" in the workshop root directory:
 
 ```bash
-cd /workspaces/cap-local-development-workshop/ \
+cd $HOME/projects/cap-local-development-workshop/ \
   && cds init --add tiny-sample debugtest \
   && cd $_ \
   && npm install
