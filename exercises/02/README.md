@@ -17,12 +17,12 @@ db
 │   └── sap.capire.bookshop-Genres.csv
 └── schema.cds
 
-test/
+test
 └── data
     └── Ex01Service.Sales.csv
 ```
 
-> You can generate this with `tree db/ test/`.
+> You can generate this with `tree db test`.
 
 and the `package.json#cds.requires.db` section, implicitly reflecting the persistent file `db.sqlite`, looks like this:
 
@@ -70,9 +70,9 @@ We could add explicit `credentials` section to the current `package.json#cds.req
 
 We could invoke `cds serve all` using the `--in-memory` option without the trailing question mark.
 
-👉 Let's go for the option of adding an explicit `credentials` section; edit the configuration in `package.json` so it looks like the sample just above.
+👉 Let's go for the option of adding an explicit `credentials` section; edit the configuration in `package.json` so it looks like the sample just above. Then make sure the CAP server has restarted (you may want to nudge it with Enter).
 
-This should cause the CAP server to emit some familiar log lines:
+When the CAP server restarts it emits some familiar log lines:
 
 ```log
 [cds] - connect to db > sqlite { url: ':memory:' }
@@ -235,7 +235,7 @@ which results in:
 At this point, only the novels in Douglas Adams' "trilogy" are in that `hitchhikers.db` file:
 
 ```log
-; sqlite3 hitchkikers.db 'select title from sap_capire_bookshop_Books;'
+; sqlite3 hitchhikers.db 'select title from sap_capire_bookshop_Books;'
 The Hitchhiker's Guide to the Galaxy
 The Restaurant at the End of the Universe
 Life, the Universe and Everything
@@ -474,7 +474,9 @@ The name can also be `csv/` which is also "special".
 <a name="footnote-2"></a>
 ### Footnote 2
 
-JSON may be a useful choice for the format of initial data if you're creating it for a mocked version of an external service where the representations of data are also in JSON, such as OData entitysets. In fact we'll be doing exactly this in the next exercise.
+JSON may be a useful choice for the format of initial data if you're creating it for a mocked version of an external service where the representations of data are also in JSON, such as OData entitysets.
+
+In fact we'll be doing exactly this in the next exercise.
 
 ```bash
 curl -s https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze/Products \
@@ -492,7 +494,7 @@ curl -s https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/north
 [cds REPL]: https://cap.cloud.sap/docs/tools/cds-cli#cds-repl
 [@cap-js/cds-test]: https://github.com/cap-js/cds-test
 [lazily loaded]: https://qmacro.org/blog/posts/2024/12/10/tasc-notes-part-4/#lazy-loading-of-the-cds-facades-many-features
-[defined our `Ex01Service` in the simplest way]: ../01/README.md#add-a-new-service-definition
+[defined our Ex01Service in the simplest way]: ../01/README.md#add-a-new-service-definition
 [CQL]: https://cap.cloud.sap/docs/cds/cql
 [stare at]: https://qmacro.org/blog/posts/2017/02/19/the-beauty-of-recursion-and-list-machinery/#initial-recognition
 [Lo and behold]: https://en.wikipedia.org/wiki/Lo_and_Behold
