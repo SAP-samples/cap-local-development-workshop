@@ -1,10 +1,31 @@
 # CAP local development workshop
 
-The content of this repository is for use in a reCAP 2025 hands-on workshop:
+[![REUSE status](https://api.reuse.software/badge/github.com/SAP-samples/cap-local-development-workshop)](https://api.reuse.software/info/github.com/SAP-samples/cap-local-development-workshop)
 
-Title: Stay cool, stay local
+## Description
+
+The content of this repository is for use in a [reCAP] 2025 hands-on workshop:
+
+Title: Stay cool, stay local.
 
 Abstract: CAP has myriad features to help developers develop. And that means local first, in a tight feedback loop. In this session you'll learn about those features and tools at your disposal as a CAP developer (predominantly Node.js) and get the chance to try some of them out yourself.
+
+## Prerequisites
+
+To participate in this workshop, the following prerequisites are required:
+
+Ideally:
+
+- The following installed on your laptop:
+  - [VS Code](https://code.visualstudio.com/download)
+  - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or equivalent container runtime engine)
+  - the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed in VS Code
+  - [git](https://git-scm.com/) (to be able to clone a repository from GitHub)
+- An active trial account on SAP Business Technology Platform, with a Cloud Foundry environment instance (see [this tutorial] for details)
+
+Alternatively:
+
+Your own development environment for CAP Node.js already set up and working, with CAP Node.js [9.0.0+](https://cap.cloud.sap/docs/releases/may25) installed and a Bash-compatible shell (e.g. via WSL on Windows), plus [jq](https://jqlang.org/) and [curl](https://curl.se/) installed.
 
 ## Exercises
 
@@ -28,6 +49,16 @@ There are other topics in Capire that also are relevant for local development, b
 - [cds add]
 - [serving UIs]
 
+## How to obtain support
+
+Support for the content in this repository is available during the actual time of the workshop event for which this content has been designed.
+
+## License
+
+Copyright (c) 2025 SAP SE or an SAP affiliate company. All rights reserved. This project is licensed under the Apache Software License, version 2.0 except as noted otherwise in the [LICENSE](LICENSES/Apache-2.0.txt) file.
+
+[reCAP]: https://recap-conf.dev/
+[this tutorial]: https://developers.sap.com/tutorials/hcp-create-trial-account.html
 [hybrid testing]: https://cap.cloud.sap/docs/advanced/hybrid-testing
 [configuration profiles]: https://cap.cloud.sap/docs/node.js/cds-env#profiles
 [SQLite]: https://cap.cloud.sap/docs/guides/databases-sqlite
