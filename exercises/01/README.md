@@ -372,7 +372,7 @@ For the sake of keeping things simple, let's assume we want to think of our auth
 
 ```cds
 using { cuid } from '@sap/cds/common';
-using { Ex01Service } from './srv/ex01-service';
+using { Ex01Service } from './ex01-service';
 
 extend service Ex01Service with {
   entity Sales : cuid {
