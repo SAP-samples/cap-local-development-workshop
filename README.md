@@ -21,11 +21,14 @@ Ideally:
   - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or equivalent container runtime engine)
   - the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed in VS Code
   - [git](https://git-scm.com/) (to be able to clone a repository from GitHub)
-- An active trial account on SAP Business Technology Platform, with a Cloud Foundry environment instance (see [this tutorial] for details)
 
 Alternatively:
 
 Your own development environment for CAP Node.js already set up and working, with CAP Node.js [9.0.0+](https://cap.cloud.sap/docs/releases/may25) installed and a Bash-compatible shell (e.g. via WSL on Windows), plus [jq](https://jqlang.org/) and [curl](https://curl.se/) installed.
+
+In both cases:
+
+  - An active trial account on SAP Business Technology Platform, with a Cloud Foundry environment instance (see [this tutorial] for details) - this will be needed for the last exercise, and we may be able to supply temporary access for participants
 
 ## Exercises
 
