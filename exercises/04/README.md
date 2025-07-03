@@ -105,16 +105,16 @@ Let's define an event, and emit it.
 Before we start, and to keep things simple, let's switch back the authors, books and genres data from within the classics profile back to the default, i.e. let's move:
 
 ```text
-db/
-├── classics/
-│   ├── data/
+db
+├── classics
+│   ├── data
 │   │   ├── sap.capire.bookshop-Authors.csv
 │   │   ├── sap.capire.bookshop-Books.csv
 │   │   ├── sap.capire.bookshop-Books_texts.csv
 │   │   └── sap.capire.bookshop-Genres.csv
 │   └── index.cds
-├── hitchhikers/
-│   ├── data/
+├── hitchhikers
+│   ├── data
 │   │   ├── sap.capire.bookshop-Authors.json
 │   │   └── sap.capire.bookshop-Books.json
 │   └── index.cds
@@ -124,14 +124,14 @@ db/
 to be:
 
 ```text
-db/
-├── data/
+db
+├── data
 │   ├── sap.capire.bookshop-Authors.csv
 │   ├── sap.capire.bookshop-Books.csv
 │   ├── sap.capire.bookshop-Books_texts.csv
 │   └── sap.capire.bookshop-Genres.csv
-├── hitchhikers/
-│   ├── data/
+├── hitchhikers
+│   ├── data
 │   │   ├── sap.capire.bookshop-Authors.json
 │   │   └── sap.capire.bookshop-Books.json
 │   └── index.cds

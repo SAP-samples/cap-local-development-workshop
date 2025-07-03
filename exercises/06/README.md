@@ -14,7 +14,9 @@ For this topic we'll limit ourselves to a simple CAP service.
 
 ```bash
 cd /workspaces/cap-local-development-workshop/ \
-  && cds init --add tiny-sample debugtest && cd $_
+  && cds init --add tiny-sample debugtest \
+  && cd $_ \
+  && npm install
 ```
 
 The "tiny-sample" facet brings in a super small books based service with a couple of data records, and it relies on the built-in service implementation as there are no JavaScript files alongside the service definition, as we can see:

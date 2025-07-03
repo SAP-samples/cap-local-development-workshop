@@ -303,13 +303,13 @@ In the light of this, what's in the monorepo project's root `node_modules/` dire
 👉 Let's take a look, with:
 
 ```bash
-tree -L 2 node_modules/ | more
+tree -L 2 node_modules | more
 ```
 
 This shows us something now familiar:
 
 ```log
-node_modules/
+node_modules
 ├── @cap-js
 │   ├── db-service
 │   ├── hana
