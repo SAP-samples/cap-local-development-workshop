@@ -715,7 +715,7 @@ We can indeed see that the connection object in `nb` contains information on "ho
 👉 Now, still at the cds REPL prompt, construct a query on the fly and send it across the connection to your locally mocked version of the remote Northbreeze service:
 
 ```text
-await nb.run(SELECT `CompanyName` .from(`Suppliers`))
+await nb.run(SELECT `CompanyName` .from `Suppliers`)
 ```
 
 > Remember that pretty much everything in this context is going to be asynchronous, i.e. in a Promise wrapper, so `await` is needed here to resolve the calls and the values they evaluate to.
