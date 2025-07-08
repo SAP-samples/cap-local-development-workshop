@@ -220,10 +220,11 @@ The individual repository versions of CAP projects within the [cloud-cap-samples
 
 We'll create a top level project to be the "head" of the monorepo itself, and bring in individual CAP Node.js project repositories as git submodules, organizing them using the NPM workspace concept.
 
-👉 Do that now in the simplest possible way (from where you should be right now, which is back at `/workspaces/cap-local-development-workshop/`):
+👉 Do that now in the simplest possible way:
 
 ```bash
-mkdir capire \
+cd $HOME/projects/cap-local-development-workshop/ \
+  && mkdir capire \
   && cd $_ \
   && jq -n '{name: "@capire/samples", workspaces: ["*"]}' > package.json \
   && git init -b main \
@@ -284,7 +285,7 @@ npm install
 find . -type d -name node_modules
 ```
 
-This shows us that there is only a single `node_modules/` directory for the entire monorepo:
+This shows us that there is only a single `node_modules/` directory (at this level) for the entire monorepo:
 
 ```log
 ./node_modules
@@ -332,7 +333,7 @@ node_modules
 ...
 ```
 
-The dependencies to the various workspace project packages (`bookshop`, `bookstore`, etc) are realized ... _via symbolic links_.
+The dependencies to the various workspace project packages in the `@capire` namespace (`bookshop`, `bookstore`, etc) are realized ... _via symbolic links_.
 
 This is a great way to organize interdependent projects (such as those in composite applications or in microservices scenarios), especially in a local development context.
 
@@ -340,7 +341,7 @@ This is a great way to organize interdependent projects (such as those in compos
 
 ## Produce and consume an event message
 
-At the end of the previous exercise we had seen what an event message looks like "in the pipe", i.e. in the default `~/cds-msg-box` file in the context of the file-based messaging channel.
+At the end of the previous exercise we had seen what an event message looks like "in the pipe", i.e. in the default `~/.cds-msg-box` file in the context of the file-based messaging channel.
 
 To round out this exploration of monorepos powered by NPM workspaces and git submodules for local development, let's fire up a couple of the projects in our monorepo here, and have them communicate asynchronously, also using the file-based messaging channel.
 
@@ -396,7 +397,7 @@ This brings us to the stage that is the equivalent of where we were at the end o
 👉 In another terminal session, move into this new `capire/` project directory and examine the "bookstore" project's CAP requirements, defined in `bookstore/package.json#cds.requires`:
 
 ```bash
-cd capire/ \
+cd $HOME/projects/cap-local-development-workshop/capire/ \
   && jq .cds.requires bookstore/package.json
 ```
 
@@ -495,6 +496,8 @@ cat ~/.cds-msg-box
 It's empty! The "bookstore" project consumed the event message.
 
 Well done.
+
+👉 Stop the CAP servers and close all but one of the terminals.
 
 ---
 

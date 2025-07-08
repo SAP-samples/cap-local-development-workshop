@@ -19,10 +19,10 @@ cd $HOME/projects/cap-local-development-workshop/ \
   && npm install
 ```
 
-The "tiny-sample" facet brings in a super small books based service with a couple of data records, and it relies on the built-in service implementation as there are no JavaScript files alongside the service definition, as we can see:
+The `tiny-sample` facet brings in a super small books based service with a couple of data records, and it relies on the built-in service implementation as there are no JavaScript files alongside the service definition, as we can see:
 
 ```bash
-; tree
+; tree -I node_modules
 .
 ├── app
 ├── db
@@ -216,7 +216,7 @@ cf set-env debugtest-000 NODE_ENV testing
 
 > See the link to NPM config in the [Further reading](#further-reading) section for more information.
 
-At this point we'd be ready to start the app up. But there's one thing we need to do specifically to be able to debug it.
+At this point we'd be ready to start the app up in the Cloud Foundry environment. But there's one thing we need to do specifically to be able to debug it.
 
 ### Enable SSH for the app
 
@@ -230,7 +230,7 @@ ssh support is disabled for app 'debugtest-000'.
 ssh is disabled for app
 ```
 
-👉 So enable SSH for the app now, like this:
+👉 Enable SSH for the app now, like this:
 
 ```bash
 cf enable-ssh debugtest-000

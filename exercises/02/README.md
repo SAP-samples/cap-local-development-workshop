@@ -98,7 +98,7 @@ mkdir db/classics/ \
   && mv db/data/ db/classics/
 ```
 
-At this point, the log output from the restarted CAP server doesn't show any "init from ..." lines, as no initial data was found ... in the expected / default location(s).
+At this point, the log output from the restarted CAP server doesn't show any "init from ..." lines, because no initial data was found ... in the expected / default location(s).
 
 But we can tell the CAP server about this "classics" initial data collection and assign a name to it, in the form of a [profile].
 
@@ -147,7 +147,7 @@ cds w --profile classics
 
 ### Add a second initial data collection
 
-To illustrate this technique more fully, let's add a second initial data collection in a similar way. There are a couple of data files for the author Douglas Adams and the books in his (increasingly inaccurately named) [Hitchhiker's Guide To The Galaxy] trilogy.
+To illustrate this technique more fully, let's add a second initial data collection in a similar way. In this workshop repository are a couple of data files for the author Douglas Adams and the books in his (increasingly inaccurately named) [Hitchhiker's Guide To The Galaxy] trilogy.
 
 👉 Create a new "hitchhikers" directory, copy the data in (from this exercise's [assets/] directory) and create an empty `index.cds` file in there too, like this:
 
@@ -159,7 +159,7 @@ mkdir -p db/hitchhikers/data/ \
 
 > Note that this time, just to illustrate the possibility, the data files are JSON not CSV. This works too, but JSON files are only supported in development mode. See [footnote 2](#footnote-2) for why JSON might be a useful choice sometimes.
 
-At this point the `db/` directory should look like this:
+At this point the `db/` directory should look like this (you can check yourself with `tree db` if you want):
 
 ```text
 db

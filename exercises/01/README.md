@@ -1,14 +1,14 @@
 # Exercise 01 - cds watch, SQLite, initial data and sample data
 
-While not really appropriate for [productive use], SQLite shines in local development environments and allows for the tightest feedback loop. It's no second class database system either, as you'll see; via the modern `@cap-js/sqlite` database service implementation it provides full support for all kinds of CQL constructions such as path expressions (see the [Further reading](#further-reading) section for more info). And with the [command line shell for SQLite], it's easy to interact with locally and natively. Along with with one of CAP's great features for local development and fast boostrapping - the ability to [provide initial data] - it's a combination that's hard to beat.
+SQLite shines in local development environments and allows for the tightest feedback loop. It's no second class database system either, as you'll see; via the modern `@cap-js/sqlite` database service implementation it provides full support for all kinds of CQL constructions such as path expressions (see the [Further reading](#further-reading) section for more info). And with the [command line shell for SQLite], it's easy to interact with locally and natively. Along with with one of CAP's great features for local development and fast boostrapping - the ability to [provide initial data] - it's a combination that's hard to beat.
 
 In this exercise you'll explore the facilities on offer in this space, using the sample project you created at the end of the previous exercise. The sample project is a "bookshop" style affair with authors, books and genres as the main players.
 
-> Throughout this exercise keep the `cds watch` process from the previous exercise running and in its own terminal instance; if necessary, open a second terminal and move to the `myproj/` project root directory to run any other commands you need, so you've always got the CAP server running and the log output visible.
+> Throughout this exercise keep the `cds watch` process from the previous exercise running and in its own terminal instance; if necessary, open a second terminal and move to the `myproj/` project root directory (with `cd $HOME/projects/cap-local-development-workshop/myproj/`) to run any other commands you need, so you've always got the CAP server running and the log output visible.
 
 ## Add a new service definition
 
-To illustrate the simple power of `cds watch` plus the ultimate [developer friendly version of no-code] (the code is in the framework, not anything you write or even generate as boilerplate), add a new service definition to expose the books in a straightforward (non-administrative) way to keep things simple (see [footnote 1](#footnote-1)).
+To illustrate the simple power of `cds watch` plus the ultimate [developer friendly version of no-code] (the code is in the framework, not anything that you have to write yourself or even generate as boilerplate), add a new service definition to expose the books in a straightforward (non-administrative) way to keep things simple (see [footnote 1](#footnote-1)).
 
 👉 Add the following to a new file `srv/ex01-service.cds`:
 
@@ -194,7 +194,7 @@ The output should reflect what we've added, replacing the earlier default. Speci
 }
 ```
 
-And when the CAP server restarts you should see something like this:
+And when the CAP server is restarted you should see something like this:
 
 ```log
 [cds] - connect to db > sqlite { url: 'db.sqlite' }
@@ -318,9 +318,9 @@ Eleonora|555
 Catweazle|22
 ```
 
-> The `sqlite3` shell has completion; you might want to try it out, it's triggered with the Tab key, and especially useful for long table names such as the one here.
+> The `sqlite3` shell has completion; you might want to try it out, it's triggered with the Tab key, and especially useful for long table names such as the one here (don't forget to terminate the statement with a semicolon `;`).
 
-Sometimes we will want to perhaps adjust or augment the data in the database directly, for testing purposes (to avoid having to modify the source initial data and then re-deploy and re-start the CAP server). That's easy because everything is local.
+Sometimes we will want to adjust or augment the data in the database directly for testing purposes (to avoid having to modify the source initial data and then re-deploy and re-start the CAP server). That's easy because everything is local.
 
 👉 Let's try that now:
 
@@ -356,7 +356,7 @@ The CAP server will look for and load sample data from `data/` directories _not_
 ```text
 .
 ├── db
-│   └── data  <-- current initial data location
+│   └── data  <-- initial data location (what we've been using so far)
 ├── srv
 └── test
     └── data  <-- sample data location
@@ -366,7 +366,7 @@ Let's explore this sample data concept now.
 
 ### Add a temporary Sales entity to the service
 
-For the sake of keeping things simple, let's assume we want to think of our authors, books and genres as initial "master" data as ultimately destined for production, and explore the sample data concept with some "transactional" data in the form of some basic sales records, sample data that we only want while we're developing locally.
+For the sake of keeping things simple, let's assume we want to think of our authors, books and genres as initial "master" data ultimately destined for production, and explore the sample data concept with some "transactional" data in the form of some basic sales records, sample data that we only want while we're developing locally.
 
 👉 In a new file called `srv/ex01-sales.cds` add this:
 
@@ -552,7 +552,7 @@ That's the end of this exercise!
 <a name="footnote-1"></a>
 ### Footnote 1
 
-They are already exposed but only in the `AdminService` which is annotated to protect it, with:
+The books are already exposed but only in the `AdminService` which is annotated to protect it, with:
 
 ```cds
 service AdminService @(requires:'admin') { ... }
@@ -589,7 +589,7 @@ Note the `--in-memory?` option in the expanded version of `cds w` which is `cds 
 <a name="footnote-3"></a>
 ### Footnote 3
 
-There is [no particular strict convention for SQLite database filename extensions]; choosing `.db` or `.sqlite` are decent choices though.
+There is [no particular strict convention for SQLite database filename extensions]; either `.db` or `.sqlite` are decent choices though.
 
 <a name="footnote-4"></a>
 ### Footnote 4
@@ -611,7 +611,6 @@ undefined
 
 See the next exercise for more on profiles.
 
-[productive use]: https://cap.cloud.sap/docs/guides/databases-sqlite#sqlite-in-production
 [command line shell for SQLite]: https://sqlite.org/cli.html
 [provide initial data]: https://cap.cloud.sap/docs/guides/databases#providing-initial-data
 [developer friendly version of no-code]: https://qmacro.org/blog/posts/2024/11/07/five-reasons-to-use-cap/#1-the-code-is-in-the-framework-not-outside-of-it

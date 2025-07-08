@@ -7,7 +7,7 @@ In [The Art and Science of CAP] series Daniel Hutzel shared with us many of the 
 
 In this exercise we'll explore [events and messaging] in CAP, and in particular, the facilities in this space that are available to us when developing locally.
 
-The general idea, as you might expect, is that CAP's eventing is agnostic at the definition and API level; the actual mechanism used to manage the receipt, queueing and relaying of messages is an implementation and platform context detail.
+The general idea, as you might expect, is that CAP's eventing is agnostic at the definition and API level; the actual mechanism used to manage the sending, receiving, queueing and relaying of messages is an implementation and platform context detail.
 
 Whether the "message channel" facilities are provided by SAP Cloud Application Event Hub, SAP Event Mesh, or another mechanism, is largely irrelevant from a developer perspective, especially in a local context, where, in addition to an in-process facility, [file-based messaging] is available and the main focus of this exercise.
 
@@ -216,7 +216,7 @@ OK, the first thing we need to do is define a requirement for messaging. And for
 
 In the previous exercise we created the "milton" user and gave them the "backoffice" role which allowed them to perform `WRITE` semantic operations on books. Let's define an event that should be emitted when a book is deleted.
 
-👉 First, declare that by adding a [custom event definition] "bookremoved" to the service, next to the `entity` definition for `Books` in `srv/ex01-service.cds`:
+👉 First, declare that by adding a [custom event definition] "bookremoved" to the service in `srv/ex01-service.cds`:
 
 ```cds
 ...
@@ -348,7 +348,7 @@ we also now see that something has been written to our file-based messaging stor
 Ex01Service.bookremoved {"data":{"ID":251},"headers":{"x-correlation-id":"c72e2a47-2faf-4bcb-9f54-37ebb2ca88a6"}}
 ```
 
-But what happens now? How do we receive such a message? We'll find out with a more comprehensive example in the next exercise where we also learn how to manage a larger scale CAP project, with independent services, locally.
+But what happens now? How is such a message subsequently received? We'll find out with a more comprehensive example in the next exercise where we also learn how to manage a larger scale CAP project, with independent services, locally.
 
 ---
 

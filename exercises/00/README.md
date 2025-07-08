@@ -18,9 +18,9 @@ Here are the options.
 
 If you already have or can install git, Docker Desktop (see [footnote 1](#footnote-1)) and VS Code on your machine, then this option may be for you.
 
-- Ensure Docker Desktop is running (and if you have a context set, ensure it points to the local engine) (see
+- Ensure Docker Desktop is running (and if you have a context set, ensure it points to the local engine)
 - Check that you have the [Dev Containers] extension installed in VS Code
-- Clone this repo `git clone https://github.com/SAP-samples/cap-local-development-workshop`
+- Clone this repo using `git clone https://github.com/SAP-samples/cap-local-development-workshop`
 - Open the directory containing the clone with VS Code, for example like this: `code cap-local-development-workshop`, or via the VS Code menu
 - Choose to "Reopen in Container" when asked:
   ![reopen in container dialogue box](assets/vscode-reopen-in-container.png)
@@ -65,9 +65,10 @@ Once you have your working environment set up, check that CAP Node.js is install
 
 We'll explore local development friendly features starting with a simple CAP Node.js project, which you should create now. It's based on the `sample` [facet], which provides a ready-to-go sample schema and set of services, plus annotations and some actual data.
 
-From the terminal prompt, initialize a new project called `myproj`, adding the `sample` facet; then move into that project's directory and install the NPM package dependencies:
+From a terminal prompt, initialize a new project called `myproj`, adding the `sample` facet; then move into that project's directory and install the NPM package dependencies:
 
 ```shell
+cd $HOME/projects/cap-local-development-workshop/ \
 cds init --add sample myproj \
   && cd $_ \
   && npm install

@@ -2,7 +2,7 @@
 
 There's no avoiding the fact that if you want your CAP apps and services to be useful, they're going to have to make use of authentication mechanisms, and consume other APIs, in the cloud. In local development mode, however, these requirements can get in the way and hinder progress.
 
-Fortunately the "developer centric" nature of CAP's local-first strategy provides various ways to not _ignore_ the reality, but to _suspend_ it until it's really needed. With the "mocking" approach, we can design and declare our domain model and adorn it with annotations relating to authentication, and rely on mocked authentication while still thinking about, defining and testing user role and attribute based access control. We can also have required services mocked for us so we can connect to them from our own.
+Fortunately the "developer centric" nature of CAP's local-first strategy provides various ways to not _ignore_ the reality, but to _suspend_ it until it's really needed. With the "mocking" approach, we can design and declare our domain model and adorn it with annotations relating to authentication, and rely on mocked authentication while still thinking about, defining and testing user role and attribute based access control. We can also have required services mocked for us so we can connect to them from our own local development context.
 
 In this exercise we'll explore both those mockable areas.
 
@@ -98,10 +98,10 @@ with some extra info in the CAP server log output too:
 
 Incidentally, this nicely underlines the difference between HTTP [401] and HTTP [403] responses:
 
-HTTP Response Code | Meaning | Summary
--|-|-
-401|The request lacked valid authentication credentials|Can't verify who you are
-403|The request did contain valid credentials (i.e. was properly authenticated) but the authenticated user does not have the requisite permissions|Your identify is verified but you don't have access
+HTTP Response Code | Description | Meaning | Summary
+-|-|-|-
+401|The request lacked valid authentication credentials|Can't verify who you are|Not authenticated
+403|The request did contain valid credentials (i.e. was properly authenticated) but the authenticated user does not have the requisite permissions|Your identify is verified but you don't have access|Not authorized
 
 #### Make a request authenticated as a user with the requisite role
 
@@ -160,7 +160,7 @@ annotate Ex01Service.Books with @restrict: [
 These annotations set up:
 
 - a requirement that any request to the service be authenticated (i.e. made with a verified identity)
-- a restriction on the `Books` entity in that any (authenticated) user can perform read operations, but only users with the "backoffice" role can perform write operations
+- a restriction on the `Books` entity in that any (authenticated) user can perform read operations, but only (authenticated) users with the "backoffice" role can perform write operations
 
 > If you're wondering about `@(requires: ...)` vs `@requires: ...`, see the link to the "Expressing multiple annotations with @(...)" section of a blog post on OData and CDS annotations in the [Further reading](#further-reading) section below.
 
