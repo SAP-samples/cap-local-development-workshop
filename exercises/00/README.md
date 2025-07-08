@@ -45,6 +45,18 @@ For our purposes, [GitHub codespaces] are essentially the same as a locally runn
   ![github-create-codespace](assets/github-create-codespace.png)
 - When the codespace is ready (in another browser tab), you're all set
 
+Then, just like option 1, so that everyone's working location is the same in all of the explicit options here:
+
+- Open a terminal and create a symbolic link so that the cloned repository is (also, virtually) in the `$HOME/projects/` directory:
+
+  ```bash
+  cd $HOME/projects/ \
+    && ln -s /workspaces/cap-local-development-workshop . \
+    && cd cap-local-development-workshop
+  ```
+
+> 🚨 At the end of this workshop, when you're done, remember to delete the codespace so as not to incur costs!
+
 ### Option 3 - dev space in SAP Business Application Studio
 
 This option is very much similar to the previous two options, in that it provides a VS Code based development environment and container. If you have a [trial account on the SAP Business Technology Platform], a [subscription to the SAP Business Application Studio], and the appropriate role collections assigned, then you can use this option.
