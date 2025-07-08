@@ -10,7 +10,9 @@ Once you've got everything set up, you'll finish this exercise by initializing a
 
 ## Set up working environment
 
-Here are the options.
+Here are the options. 
+
+> Only option 1 will allow for the completion of the `cds debug` based debugging in the last exercise, due to the construct and online context of the codespace / dev space; see the footnote in that exercise which shows an alternative way of debugging.
 
 👉 Choose one of them, work through the steps, and then jump forward to continue on from the [check the CAP Node.js version](#check-cap-nodejs-version) section.
 
