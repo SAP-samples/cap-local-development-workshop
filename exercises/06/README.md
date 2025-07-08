@@ -53,6 +53,8 @@ When debugging, we'll set a breakpoint on the `console.log(book)` line shortly.
 
 We're already all set - it's straightforward.
 
+However, as [mentioned in the first exercise](../00#set-up-working-environment), if you're using a GitHub codespace or a Business Application Studio dev space, at this point you won't be able to avail yourself of the `cds debug` facilities as they (deliberately) make use of localised websocket connections. See [footnote 1](#footnote-1) for a quick summary of an alternative.
+
 ### Start the CAP server in debug mode
 
 👉 Start debugging the service with `cds debug`, which as we'll see from the output is just shorthand for `cds watch --debug`:
@@ -324,6 +326,22 @@ It's (almost) magic!
 - [Debugging JavaScript with Chrome DevTools]
 - [Method: srv.after(request)]
 - [NPM config]
+
+---
+
+## Footnotes
+
+### Footnote 1
+
+Debugging in a codespace or dev space can be achieved in the context of a CAP Node.js process using the debugging tools built in to the environment. Here's how to proceed.
+
+First, re-open the space at the `debugtest/` directory, with the "File -> Open Folder" menu option, specifying `/workspaces/cap-local-development-workshop/debugtest/` as the location:
+
+![the Open Folder dialog](assets/open-folder-dialog.png)
+
+Then select the "Debugging" perspective (via the icon on the left hand side, highlighted with a "1" in blue in the screenshot below), and within that perspective, open the `srv/cat-service.js` file, set a breakpoint on the `console.log` line, and then select the "run" icon for the "cds serve" debugging configuration in the top left:
+
+![the debugging perspective](assets/space-debugging-facility.png)
 
 [Debugging]: https://cap.cloud.sap/docs/tools/cds-cli#cds-debug
 [Node.js debugging]: https://nodejs.org/en/learn/getting-started/debugging
