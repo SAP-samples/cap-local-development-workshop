@@ -81,7 +81,7 @@ From a terminal prompt, initialize a new project called `myproj`, adding the `sa
 
 ```shell
 cd $HOME/projects/cap-local-development-workshop/ \
-cds init --add sample myproj \
+  && cds init --add sample myproj \
   && cd $_ \
   && npm install
 ```
