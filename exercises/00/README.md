@@ -80,7 +80,7 @@ This option is very much similar to the previous two options, in that it provide
 
 We'll explore local development friendly features starting with a simple CAP Node.js project, which you should create now. It's based on the `sample` [facet], which provides a ready-to-go sample schema and set of services, plus annotations and some actual data.
 
-From a terminal prompt, initialize a new project called `myproj`, adding the `sample` facet; then move into that project's directory and install the NPM package dependencies:
+👉 From a terminal prompt, initialize a new project called `myproj`, adding the `sample` facet; then move into that project's directory and install the NPM package dependencies:
 
 ```shell
 cd $HOME/projects/cap-local-development-workshop/ \
@@ -113,6 +113,8 @@ added 127 packages, and audited 128 packages in 1m
 ## Start the fast development cycle with cds watch
 
 With the previous shell invocation you created a project from scratch. And now it's time to invoke `cds watch`, a command so powerful and fundamental to CAP Node.js rapid development that the humble [Capire entry for it] doesn't really do it justice :-)
+
+👉 Do that now:
 
 ```shell
 cds watch
