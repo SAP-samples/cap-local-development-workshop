@@ -43,9 +43,8 @@ For our purposes, [GitHub codespaces] are essentially the same as a locally runn
 
 - At the [home of this repo] on GitHub, use the "Code" button.
 - Select the "Codespaces" tab.
-- Choose to "Create codespace on main":
+- Choose to "Create codespace on main", and when the codespace is ready, you're all set:
   ![github-create-codespace](assets/github-create-codespace.png)
-- When the codespace is ready (in another browser tab), you're all set
 
 Then, just like option 1, so that everyone's working location is the same in all of the explicit options here:
 
