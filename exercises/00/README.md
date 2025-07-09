@@ -70,6 +70,8 @@ This option is very much similar to the previous two options, in that it provide
 
 ## Check CAP Node.js version
 
+👉 _Regardless of how you got to your working environment, continue this exercise from this point._
+
 Once you have your working environment set up, check that CAP Node.js is installed (it should be) by opening up a terminal (menu option "Terminal -> New Terminal") and running `cds v`. The version for `@sap/cds-dk` should be [9.0.0+]. Here's an example from a terminal prompt from Option 1, but regardless of the option you chose, it should look similar:
 
 ![running cds v in a terminal prompt](assets/vscode-shell-cds-version.png)
