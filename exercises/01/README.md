@@ -33,8 +33,10 @@ keep things simple (see [footnote 1](#footnote-1)).
 👉 Add the following to a new file `srv/ex01-service.cds`:
 
 ```cds
-using { sap.capire.bookshop as my } from '../db/schema';
-@path: '/ex01' service Ex01Service {
+using {sap.capire.bookshop as my} from '../db/schema';
+
+@path: '/ex01'
+service Ex01Service {
   entity Books as projection on my.Books;
 }
 ```
@@ -365,7 +367,8 @@ What about the data?
 select title,stock from sap_capire_bookshop_Books;
 ```
 
-which should show:
+which should show this (with or without The Raven, depending on the recent
+requests):
 
 ```text
 Wuthering Heights|12

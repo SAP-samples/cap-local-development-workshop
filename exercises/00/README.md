@@ -123,7 +123,7 @@ annotations and some actual data.
 `sample` facet; then move into that project's directory and install the NPM
 package dependencies:
 
-```shell
+```bash
 cd $HOME/projects/cap-local-development-workshop/ \
   && cds init --add sample myproj \
   && cd $_ \
@@ -160,7 +160,7 @@ do it justice :-)
 
 👉 Do that now:
 
-```shell
+```bash
 cds watch
 ```
 

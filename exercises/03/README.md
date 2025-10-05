@@ -1,16 +1,28 @@
 # Exercise 03 - mocking auth and required services
 
-There's no avoiding the fact that if you want your CAP apps and services to be useful, they're going to have to make use of authentication mechanisms, and consume other APIs, in the cloud. In local development mode, however, these requirements can get in the way and hinder progress.
+There's no avoiding the fact that if you want your CAP apps and services to be
+useful, they're going to have to make use of authentication mechanisms, and
+consume other APIs, in the cloud. In local development mode, however, these
+requirements can get in the way and hinder progress.
 
-Fortunately the "developer centric" nature of CAP's local-first strategy provides various ways to not _ignore_ the reality, but to _suspend_ it until it's really needed. With the "mocking" approach, we can design and declare our domain model and adorn it with annotations relating to authentication, and rely on mocked authentication while still thinking about, defining and testing user role and attribute based access control. We can also have required services mocked for us so we can connect to them from our own local development context.
+Fortunately the "developer centric" nature of CAP's local-first strategy
+provides various ways to not _ignore_ the reality, but to _embrace_ it locally
+ready for when it's really needed. With the "mocking" approach, we can design
+and declare our domain model and adorn it with annotations relating to
+authentication, and rely on mocked authentication while still thinking about,
+defining and testing user role and attribute based access control. We can also
+have required services mocked for us so we can connect to them from our own
+local development context.
 
 In this exercise we'll explore both those mockable areas.
 
 ## Explore the auth in play
 
-You may have already noticed the mocked authentication approach declared in the CAP server's log lines.
+You may have already noticed the mocked authentication approach declared in the
+CAP server's log lines.
 
-👉 Check this by stopping any currently running CAP server (the `cds watch` process), restarting it with:
+👉 Check this by stopping any currently running CAP server (the `cds watch`
+process), restarting it with:
 
 ```bash
 DEBUG=auth cds w --profile classics
@@ -25,23 +37,31 @@ and observe this output:
 }
 ```
 
-The "mocked" [authentication strategy] uses HTTP Basic Authentication (simple usernames and passwords) combined with assignment of sample roles to [pre-defined test users]. It's more or less the same as the "basic" authentication strategy (as we can see from the implementation file in the log output), but with this set of users and roles pre-configured.
+The "mocked" [authentication strategy] uses HTTP Basic Authentication (with
+simple usernames and passwords) combined with assignment of sample roles to
+[pre-defined test users]. It's more or less the same as the "basic"
+authentication strategy (as we can see from the implementation file in the log
+output), but with this set of users and roles pre-configured.
 
 ### Try accessing AdminService resources
 
-The `AdminService` (currently made available at `/odata/v4/admin`) has a [@requires] annotation which declares that only users with the "admin" role have access (in `srv/admin-service.cds`):
+The `AdminService` (currently made available at `/odata/v4/admin`) has a
+[@requires] annotation which declares that only users with the "admin" role
+have access (in `srv/admin-service.cds`):
 
 ```cds
-using { sap.capire.bookshop as my } from '../db/schema';
-service AdminService @(requires:'admin') {
-  entity Books as projection on my.Books;
+using {sap.capire.bookshop as my} from '../db/schema';
+
+service AdminService @(requires: 'admin') {
+  entity Books   as projection on my.Books;
   entity Authors as projection on my.Authors;
 }
 ```
 
 #### Attempt an unauthenticated request
 
-👉 Try to access the `Books` resource within that service without supplying any authentication detail:
+👉 Try to access the `Books` resource within that service without supplying any
+authentication detail:
 
 ```bash
 curl -i localhost:4004/odata/v4/admin/Books
@@ -49,30 +69,40 @@ curl -i localhost:4004/odata/v4/admin/Books
 
 > The `--include` (or `-i`) option causes `curl` to emit the response headers.
 
-This should result in an HTTP 401 response that will look like this (other response headers have been omitted for brevity):
+This should result in an HTTP 401 response that will look like this (other
+response headers have been omitted for brevity):
 
 ```log
 HTTP/1.1 401 Unauthorized
 WWW-Authenticate: Basic realm="Users"
 ```
 
-This will also have been logged by the CAP server due to the `DEBUG=auth` setting:
+This will also have been logged by the CAP server due to the `DEBUG=auth`
+setting:
 
 ```log
 [basic] - 401 > login required
 ```
 
-As authorization checks (in play here) are predicated on verified identity claims, [authentication is a prerequisite] here.
+As authorization checks (in play here) are predicated on verified identity
+claims (i.e. you have to authenticate yourself to provide an identity against
+which authorization checks can be made), [authentication is a prerequisite]
+here.
 
 #### Attempt a request authenticated as a user without the requisite role
 
-👉 Try authenticating with the pre-defined user "yves", who has the role "internal-user" (see the [pre-defined test users]):
+👉 Try authenticating with the pre-defined user "yves", who has the role
+"internal-user" (see the [pre-defined test users]):
 
 ```bash
 curl -i -u 'yves:' localhost:4004/odata/v4/admin/Books
 ```
 
-> The colon separates username and password values when supplying such credentials via `curl`'s `--user` (or `-u`) option. None of the pre-defined users have passwords (i.e. the passwords are "empty"). If you omit the colon from the value supplied to `-u` here, `curl` will prompt you for a password (you can just hit Enter to send an empty password in this case).
+> The colon separates username and password values when supplying such
+> credentials via `curl`'s `--user` (or `-u`) option. None of the pre-defined
+> users have passwords (i.e. the passwords are "empty"). If you omit the colon
+> from the value supplied to `-u` here, `curl` will prompt you for a password
+> (you can just hit Enter to send an empty password in this case).
 
 This request should elicit an HTTP status thus:
 
@@ -96,7 +126,8 @@ with some extra info in the CAP server log output too:
 }
 ```
 
-Incidentally, this nicely underlines the difference between HTTP [401] and HTTP [403] responses:
+Incidentally, this nicely underlines the difference between HTTP [401] and HTTP
+[403] responses:
 
 HTTP Response Code | Description | Meaning | Summary
 -|-|-|-
@@ -105,14 +136,16 @@ HTTP Response Code | Description | Meaning | Summary
 
 #### Make a request authenticated as a user with the requisite role
 
-👉 Repeat the same resource request but this time as user "alice", who does have the "admin" role listed in the `@requires` annotation:
+👉 Repeat the same resource request but this time as user "alice", who does
+have the "admin" role listed in the `@requires` annotation:
 
 ```bash
 curl -s -u 'alice:' localhost:4004/odata/v4/admin/Books \
   | jq .value[].title
 ```
 
-> The `--silent` (or `-s`) option turns on silent mode which means we don't get the typical response resource retrieval progress info:
+> The `--silent` (or `-s`) option turns on silent mode which means we don't get
+> the typical response resource retrieval progress info:
 >
 > ```log
 >   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -138,35 +171,52 @@ and here's what's returned:
 
 ### Explore the @requires and @restrict annotations with the Ex01Service
 
-In a previous exercise we [added a new service definition] in `srv/ex01-service.cds`; now we'll add some annotations to that to get a feel for how they work, but more importantly to see how the mocked strategy supports exactly what would be supported in production.
+In a previous exercise we [added a new service definition] in
+`srv/ex01-service.cds`; now we'll add some annotations to that to get a feel
+for how they work, but more importantly to see how the mocked strategy supports
+exactly what would be supported in production.
 
 #### Set up restrictions
 
-👉 Append a couple of annotation declarations to the `srv/ex01-service.cds` file so the entire content ends up looking like this:
+👉 Append a couple of annotation declarations to the `srv/ex01-service.cds`
+file so the entire content ends up looking like this:
 
 ```cds
-using { sap.capire.bookshop as my } from '../db/schema';
-@path: '/ex01' service Ex01Service {
+using {sap.capire.bookshop as my} from '../db/schema';
+
+@path: '/ex01'
+service Ex01Service {
   entity Books as projection on my.Books;
 }
 
 annotate Ex01Service with @requires: 'authenticated-user';
+
 annotate Ex01Service.Books with @restrict: [
-  { grant: 'READ' },
-  { grant: 'WRITE', to: 'backoffice' }
+  {grant: 'READ'},
+  {
+    grant: 'WRITE',
+    to   : 'backoffice'
+  }
 ];
 ```
 
 These annotations set up:
 
-- a requirement that any request to the service be authenticated (i.e. made with a verified identity)
-- a restriction on the `Books` entity in that any (authenticated) user can perform read operations, but only (authenticated) users with the "backoffice" role can perform write operations
+- a requirement that any request to the service be authenticated (i.e. made
+  with a verified identity)
+- a restriction on the `Books` entity in that any (authenticated) user can
+  perform read operations, but only (authenticated) users with the "backoffice"
+  role can perform write operations
 
-> If you're wondering about `@(requires: ...)` vs `@requires: ...`, see the link to the "Expressing multiple annotations with @(...)" section of a blog post on OData and CDS annotations in the [Further reading](#further-reading) section below.
+> If you're wondering about `@(requires: ...)` vs `@requires: ...`, see the
+> link to the "Expressing multiple annotations with @(...)" section of a blog
+> post on OData and CDS annotations in the [Further reading](#further-reading)
+> section below.
 
 #### Make an unauthenticated request
 
-👉 Try to retrieve the details of the book with ID 207 ("Jane Eyre") without providing any authentication details:
+👉 Try to retrieve the details of the book with ID 207 ("Jane Eyre") without
+providing any authentication details:
 
 ```bash
 curl -i localhost:4004/ex01/Books/207
@@ -189,13 +239,16 @@ and there's this line in the CAP server log:
 
 #### Make authenticated requests with an administrative user
 
-👉 Try that again, authenticating as the pre-defined administrative user "alice":
+👉 Try that again, authenticating as the pre-defined administrative user
+"alice":
 
 ```bash
 curl -i -u 'alice:' localhost:4004/ex01/Books/207
 ```
 
-The conditions of the (rather general) `READ` grant, combined with the `authenticated-user` requirement, are both fulfilled, meaning success for Alice:
+The conditions of the (rather general) `READ` grant, combined with the
+`authenticated-user` requirement, are both fulfilled, meaning success for
+Alice:
 
 ```log
 HTTP/1.1 200 OK
@@ -222,11 +275,18 @@ HTTP/1.1 403 Forbidden
 
 #### Define a new office user
 
-While there are pre-defined users we can make use of in the mocked authentication strategy, we can define our own too, which is especially helpful when we're iterating locally on building out the domain model and including the security considerations with that, which often means we're also defining our own roles (such as "backoffice" in this `{ grant: 'WRITE', to: 'backoffice'}` example here).
+While there are pre-defined users we can make use of in the mocked
+authentication strategy, we can define our own too, which is especially helpful
+when we're iterating locally on building out the domain model and including the
+security considerations with that, which often means we're also defining our
+own roles (such as "backoffice" in this `{ grant: 'WRITE', to: 'backoffice'}`
+example here).
 
-We could put this configuration in `package.json#cds` but for a change, let's use a [project-local .cdsrc.json] file.
+We could put this configuration in `package.json#cds` but for a change, let's
+use a [project-local .cdsrc.json] file.
 
-👉 Create a `.cdsrc.json` file in the project root, with this content for Milton, the [stapler guy]:
+👉 Create a `.cdsrc.json` file in the project root, with this content for
+Milton, the [stapler guy]:
 
 ```json
 {
@@ -247,7 +307,8 @@ We could put this configuration in `package.json#cds` but for a change, let's us
 
 Once this is saved, the CAP server will restart.
 
-👉 To satisfy our curiosity, check the effective environment, specifically for the auth details:
+👉 To satisfy our curiosity, check the effective environment, specifically for
+the auth details:
 
 ```bash
 cds env requires.auth
@@ -277,7 +338,8 @@ This should emit:
 
 Alongside the pre-defined users we can see Milton.
 
-> Adding the `--profile classics` option here is also possible, but the end result is the same in this case.
+> Adding the `--profile classics` option here is also possible, but the end
+> result is the same in this case.
 
 #### Authenticate a request with the new office user
 
@@ -297,7 +359,8 @@ HTTP/1.1 403 Forbidden
 
 Of course, we need to give him the "backoffice" role.
 
-👉 Do that now by adding it to the `[ ... ]` list of roles in `.cdsrc.json` so that it looks like this:
+👉 Do that now by adding it to the `[ ... ]` list of roles in `.cdsrc.json` so
+that it looks like this:
 
 ```json
 "roles": [
@@ -318,21 +381,34 @@ Success!
 HTTP/1.1 204 No Content
 ```
 
-This just scratches the surface of what's possible; remember that the power of all of the abstracted authentication and authorisation layers (including users) is available to all authentication strategies, even (or "especially") the ones designed for local development. And there's no change when one moves to production, at that level.
+This just scratches the surface of what's possible; remember that the power of
+all of the abstracted authentication and authorisation layers (including users)
+is available to all authentication strategies, even (or "especially") the ones
+designed for local development. And there's no change when one moves to
+production, at that level.
 
 See the [Further reading](#further-reading) section for more information.
 
 ## Mock an external service
 
-Working locally doesn't mean that we need to avoid development that involves remote services. A remote service API definition can be downloaded and imported, so that it becomes known to the CAP server (as a "required" service, rather than a "provided" service), and via the translation of the API definition to an internal model representation in Core Schema Notation [CSN] it can also be given active behavior and even test data.
+Working locally doesn't mean that we need to avoid development that involves
+remote services. A remote service API definition can be downloaded and
+imported, so that it becomes known to the CAP server (as a "required" service,
+rather than a "provided" service), and via the translation of the API
+definition to an internal model representation in Core Schema Notation [CSN] it
+can also be given active behavior and even test data.
 
-Everyone loves Northwind (don't they?) so let's use a cut-down version of Northwind, called Northbreeze, which is available as an OData v4 service at <https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze>.
+Everyone loves Northwind (don't they?) so let's use a cut-down version of
+Northwind, called Northbreeze, which is available as an OData v4 service at
+<https://developer-challenge.cfapps.eu10.hana.ondemand.com/odata/v4/northbreeze>.
 
 ### Import the API definition
 
-The API definition of the Northbreeze service is essentially the EDMX available in the service's metadata document.
+The API definition of the Northbreeze service is essentially the EDMX available
+in the service's metadata document.
 
-👉 Retrieve the metadata document resource and store the representation in a file:
+👉 Retrieve the metadata document resource and store the representation in a
+file:
 
 ```bash
 curl -s \
@@ -340,7 +416,8 @@ curl -s \
   > northbreeze.edmx
 ```
 
-👉 Now use the `cds import` command to import the API definition (in this EDMX form) and convert it to CSN:
+👉 Now use the `cds import` command to import the API definition (in this EDMX
+form) and convert it to CSN:
 
 ```bash
 cds import northbreeze.edmx
@@ -355,13 +432,15 @@ You should see something like this:
 using { northbreeze as external } from './external/northbreeze'
 ```
 
-👉 Let's have a look at where the imported CSN is, in relation to other content in `srv/`:
+👉 Let's have a look at where the imported CSN is, in relation to other content
+in `srv/`:
 
 ```bash
 tree srv
 ```
 
-We can see that the default location that `cds import` uses makes a lot of sense, in that it's a service, but not part of our own overall CDS model:
+We can see that the default location that `cds import` uses makes a lot of
+sense, in that it's a service, but not part of our own overall CDS model:
 
 ```log
 srv
@@ -375,7 +454,9 @@ srv
     └── northbreeze.edmx
 ```
 
-Moreover, a reference to this as a "required" service has been added to the `package.json#cds` based configuration, which we can perhaps better observe by looking at the effective `requires` configuration.
+Moreover, a reference to this as a "required" service has been added to the
+`package.json#cds` based configuration, which we can perhaps better observe by
+looking at the effective `requires` configuration.
 
 👉 Do that now:
 
@@ -383,7 +464,10 @@ Moreover, a reference to this as a "required" service has been added to the `pac
 cds env requires
 ```
 
-As well as the sections for `middlewares`, `queue`, `auth` and `db` (which have been reduced for brevity here), we now have `northbreeze` listed, an external OData resource whose model is known and which is implemented by a built-in remote-service module:
+As well as the sections for `middlewares`, `queue`, `auth` and `db` (which have
+been reduced for brevity here), we now have `northbreeze` listed, an external
+OData resource whose model is known and which is implemented by a built-in
+remote-service module:
 
 ```log
 {
@@ -422,15 +506,21 @@ As well as the sections for `middlewares`, `queue`, `auth` and `db` (which have 
 
 ### Have the service mocked
 
-From this point until the end of this exercise, you'll be digging into the mocking of this Northbreeze service (see [footnote 1](#footnote-1)).
+From this point until the end of this exercise, you'll be digging into the
+mocking of this Northbreeze service (see [footnote 1](#footnote-1)).
 
-👉 So for now, stop the CAP server that's still running and listening on port 4004, and then, in that same terminal session, start mocking this service (using the same terminal session here is just to keep the "noise" to a minimum, not because of any technical requirement or restriction):
+👉 So for now, stop the CAP server that's still running and listening on port
+4004, and then, in that same terminal session, start mocking this service
+(using the same terminal session here is just to keep the "noise" to a minimum,
+not because of any technical requirement or restriction):
 
 ```bash
 cds mock northbreeze --port 5005
 ```
 
-> Normally, without the `--port` option, a random port will be chosen, but for the sake of this workshop and consistency of instructions, we'll use a specific port.
+> Normally, without the `--port` option, a random port will be chosen, but for
+> the sake of this workshop and consistency of instructions, we'll use a
+> specific port.
 
 This will start a CAP server just for this service:
 
@@ -455,7 +545,8 @@ But there's no data right now, as illustrated with simple request like this:
 
 ### Add some data
 
-The sensible place to put data is "next to" the model definition for this external service, which means here:
+The sensible place to put data is "next to" the model definition for this
+external service, which means here:
 
 ```text
 srv
@@ -473,7 +564,9 @@ srv
 
 #### Use generated data
 
-👉 So, after stopping the mocking server process, create a `data/` directory in `srv/external/`, use the "data" facet with `cds add` to generate a few records of mock data for the `Suppliers` entity, and then restart the mocking:
+👉 So, after stopping the mocking server process, create a `data/` directory in
+`srv/external/`, use the "data" facet with `cds add` to generate a few records
+of mock data for the `Suppliers` entity, and then restart the mocking:
 
 ```bash
 mkdir srv/external/data/ \
@@ -526,11 +619,13 @@ which should show output similar to this (massively reduced here for brevity):
 
 #### Retrieve, store and use data from the real service
 
-But we can do better. Why not grab and store some "real" data from the actual service, and use it when we mock?
+But we can do better. Why not grab and store some "real" data from the actual
+service, and use it when we mock?
 
 👉 First, stop the mock server process again.
 
-> Remember that the monitor-and-auto-restart feature comes with `cds watch`, not `cds mock`; that's why we're stopping and starting the `cds mock` server.
+> Remember that the monitor-and-auto-restart feature comes with `cds watch`,
+> not `cds mock`; that's why we're stopping and starting the `cds mock` server.
 
 👉 Now, remove the CSV data we just generated:
 
@@ -538,7 +633,8 @@ But we can do better. Why not grab and store some "real" data from the actual se
 rm srv/external/data/*.csv
 ```
 
-👉 Now retrieve the entityset resources (in their default JSON representation) and put the data into JSON files in that `srv/external/data/` directory:
+👉 Now retrieve the entityset resources (in their default JSON representation)
+and put the data into JSON files in that `srv/external/data/` directory:
 
 ```bash
 for entity in Products Suppliers Categories; do
@@ -590,7 +686,8 @@ cds mock northbreeze --port 5005
 curl -s localhost:5005/odata/v4/northbreeze/Suppliers | jq .value
 ```
 
-This time, the data is more realistic, as it's the actual data we fetched from the real service (again, heavily reduced here for brevity):
+This time, the data is more realistic, as it's the actual data we fetched from
+the real service (again, heavily reduced here for brevity):
 
 ```json
 [
@@ -619,17 +716,24 @@ Great! Now we have a fully mocked external service complete with real data.
 
 ### Access the mocked remote service from the cds REPL (bonus)
 
-If you have time, you can build on your confidence with an interactive REPL context by connecting to this mocked remote service from within the cds REPL.
+If you have time, you can build on your confidence with an interactive REPL
+context by connecting to this mocked remote service from within the cds REPL.
 
-👉 First, make sure the mock service is still running and listening on port 5005 (i.e. you haven't stopped it just now).
+👉 First, make sure the mock service is still running and listening on port
+5005 (i.e. you haven't stopped it just now).
 
-👉 Now, let's have a look at the "wiring" for this mocked remote service in our local development mode context; take a peek in the `.cds-services.json` file in your home directory:
+👉 Now, let's have a look at the "wiring" for this mocked remote service in our
+local development mode context; take a peek in the `.cds-services.json` file in
+your home directory:
 
 ```bash
 jq . ~/.cds-services.json
 ```
 
-This is a file that the CAP server runtime uses in local development mode to declare and detail which services are (being) provided, and where. It will look something like this (the server IDs are just process IDs so they will be different for you):
+This is a file that the CAP server runtime uses in local development mode to
+declare and detail which services are (being) provided, and where. It will look
+something like this (the server IDs are just process IDs so they will be
+different for you):
 
 ```json
 {
@@ -653,9 +757,13 @@ This is a file that the CAP server runtime uses in local development mode to dec
 }
 ```
 
-We can see from this that any local CAP server requiring the "northbreeze" service knows that it's available, and how to reach it (via the `credentials.url` property).
+We can see from this that any local CAP server requiring the "northbreeze"
+service knows that it's available, and how to reach it (via the
+`credentials.url` property).
 
-👉 CAP makes use of the [SAP Cloud SDK] for management of destination information about, and connectivity to, remote services. So before we continue at this point, let's add the SDK packages:
+👉 CAP makes use of the [SAP Cloud SDK] for management of destination
+information about, and connectivity to, remote services. So before we continue
+at this point, let's add the SDK packages:
 
 ```bash
 npm add @sap-cloud-sdk/http-client@4
@@ -667,13 +775,16 @@ npm add @sap-cloud-sdk/http-client@4
 cds repl
 ```
 
-👉 and in the prompt, [connect to the remote service] and store that connection in a variable:
+👉 and in the prompt, [connect to the remote service] and store that connection
+in a variable:
 
 ```text
 nb = await cds.connect.to("northbreeze")
 ```
 
-This will emit the internal representation of this connection, which you can get a summary of using the `.inspect` command which you learned about [in a previous exercise], like this:
+This will emit the internal representation of this connection, which you can
+get a summary of using the `.inspect` command which you learned about [in a
+previous exercise], like this:
 
 ```bash
 > .inspect nb .depth=0
@@ -700,7 +811,8 @@ nb: RemoteService {
 }
 ```
 
-We can indeed see that the connection object in `nb` contains information on "how to reach" the service:
+We can indeed see that the connection object in `nb` contains information on
+"how to reach" the service:
 
 ```text
 > nb.destination
@@ -710,20 +822,27 @@ We can indeed see that the connection object in `nb` contains information on "ho
 }
 ```
 
-(Does this structure [remind you of something]? Good, because that's essentially what it is!)
+(Does this structure [remind you of something]? Good, because that's
+essentially what it is!)
 
-👉 Now, still at the cds REPL prompt, construct a query on the fly and send it across the connection to your locally mocked version of the remote Northbreeze service:
+👉 Now, still at the cds REPL prompt, construct a query on the fly and send it
+across the connection to your locally mocked version of the remote Northbreeze
+service:
 
 ```text
 await nb.run(SELECT `CompanyName` .from `Suppliers`)
 ```
 
-> Remember that pretty much everything in this context is going to be asynchronous, i.e. in a Promise wrapper, so `await` is needed here to resolve the calls and the values they evaluate to.
+> Remember that pretty much everything in this context is going to be
+> asynchronous, i.e. in a Promise wrapper, so `await` is needed here to resolve
+> the calls and the values they evaluate to.
 
 This results in:
 
-- an actual OData call from the cds REPL context across to the mocked Northbreeze service on port 5005
-- the retrieval of the Suppliers entityset, specifically the `CompanyName` property for each entity
+- an actual OData call from the cds REPL context across to the mocked
+  Northbreeze service on port 5005
+- the retrieval of the Suppliers entityset, specifically the `CompanyName`
+  property for each entity
 
 ```text
 [
@@ -743,9 +862,14 @@ This results in:
 Excellent! It's worth pausing for a second to take this in:
 
 - everything is happening locally
-- but even in this local context, we're still connecting "remotely" to the mocked Northbreeze service
-- there are local development specific affordances in play here (such as the `~/.cds-services.json` file) that make coordination of service management simple when it needs to be
-- even though everything is happening locally, the SAP Cloud SDK is still in play and doesn't really care about the difference between one (mocked) remote service and another, an abstraction which is of great benefit to us
+- but even in this local context, we're still connecting "remotely" to the
+  mocked Northbreeze service
+- there are local development specific affordances in play here (such as the
+  `~/.cds-services.json` file) that make coordination of service management
+  simple when it needs to be
+- even though everything is happening locally, the SAP Cloud SDK is still in
+  play and doesn't really care about the difference between one (mocked) remote
+  service and another, an abstraction which is of great benefit to us
 
 ---
 
@@ -753,9 +877,12 @@ Excellent! It's worth pausing for a second to take this in:
 
 - The [Authentication] topic in Capire
 - The [CDS-based Authorization] topic in Capire
-- The contents of the [Service integration with SAP Cloud Application Programming Model] CodeJam
-- [Part 4 - digging deeper] of [Level up your CAP skills by learning to use the cds REPL]
-- The [Expressing multiple annotations with @(...)] section of [A deep dive into OData and CDS annotations]
+- The contents of the [Service integration with SAP Cloud Application
+  Programming Model] CodeJam
+- [Part 4 - digging deeper] of [Level up your CAP skills by learning to use the
+  cds REPL]
+- The [Expressing multiple annotations with @(...)] section of [A deep dive
+  into OData and CDS annotations]
 
 ---
 
@@ -768,7 +895,11 @@ Excellent! It's worth pausing for a second to take this in:
 <a name="footnote-1"></a>
 ### Footnote 1
 
-We are going to be mocking in a separate CAP server process, for a more realistic scenario, albeit still local. It is also possible to use in-process mocking, where the same single CAP server provides services and also mocks the required services, but we won't be covering that here. See [Run local with mocks] in Capire for more info.
+We are going to be mocking in a separate CAP server process, for a more
+realistic scenario, albeit still local. It is also possible to use in-process
+mocking, where the same single CAP server provides services and also mocks the
+required services, but we won't be covering that here. See [Run local with
+mocks] in Capire for more info.
 
 [authentication strategy]: https://cap.cloud.sap/docs/node.js/authentication#strategies
 [pre-defined test users]: https://cap.cloud.sap/docs/node.js/authentication#mock-users

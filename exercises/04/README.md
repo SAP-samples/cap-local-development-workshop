@@ -1,35 +1,52 @@
 # Exercise 04 - a first look at local messaging and events
 
-In [The Art and Science of CAP] series Daniel Hutzel shared with us many of the influences that informed CAP's design, and explained in great detail some of the core axioms. There are key philosophical truths that are inherent in what CAP is, two of which are:
+In [The Art and Science of CAP] series Daniel Hutzel shared with us many of the
+influences that informed CAP's design, and explained in great detail some of
+the core axioms. There are key philosophical truths that are inherent in what
+CAP is, two of which are:
 
 - [Everything is a service]
 - [Everything is an event]
 
-In this exercise we'll explore [events and messaging] in CAP, and in particular, the facilities in this space that are available to us when developing locally.
+In this exercise we'll explore [events and messaging] in CAP, and in
+particular, the facilities in this space that are available to us when
+developing locally.
 
-The general idea, as you might expect, is that CAP's eventing is agnostic at the definition and API level; the actual mechanism used to manage the sending, receiving, queueing and relaying of messages is an implementation and platform context detail.
+The general idea, as you might expect, is that CAP's eventing is agnostic at
+the definition and API level; the actual mechanism used to manage the sending,
+receiving, queueing and relaying of messages is an implementation and platform
+context detail.
 
-Whether the "message channel" facilities are provided by SAP Cloud Application Event Hub, SAP Event Mesh, or another mechanism, is largely irrelevant from a developer perspective, especially in a local context, where, in addition to an in-process facility, [file-based messaging] is available and the main focus of this exercise.
+Whether the "message channel" facilities are provided by SAP Cloud Application
+Event Hub, SAP Event Mesh, or another mechanism, is largely irrelevant from a
+developer perspective, especially in a local context, where, in addition to an
+in-process facility, [file-based messaging] is available and the main focus of
+this exercise.
 
 ## Take a quick look at in-process eventing
 
-Like [in-process mocking of required services], CAP supports in-process eventing. It's worth taking a brief look here, not least to have the chance to practice embracing the cds REPL, and to see how simple things are.
+Like [in-process mocking of required services], CAP supports in-process
+eventing. It's worth taking a brief look here, not least to have the chance to
+practice embracing the cds REPL, and to see how simple things are.
 
 ### Start the cds REPL
 
-👉 Before you begin, stop any CAP server processes for now. Then launch the REPL:
+👉 Before you begin, stop any CAP server processes for now. Then launch the
+REPL:
 
 ```bash
 cds repl
 ```
 
-👉 At the prompt, define a simple service with a handler for a "widget-produced" event:
+👉 At the prompt, define a simple service with a handler for a
+"widget-produced" event:
 
 ```javascript
 (srv = new cds.Service).on('widget-produced', x => console.log('Received:', x))
 ```
 
-This should emit the basic `Service` definition just created, which includes the `on` phase handler:
+This should emit the basic `Service` definition just created, which includes
+the `on` phase handler:
 
 ```javascript
 Service {
@@ -60,15 +77,19 @@ Received: EventMessage { event: 'widget-produced', data: { size: 'medium' } }
 Received: EventMessage { event: 'widget-produced', data: { size: 'large' } }
 ```
 
-This is a simple example of in-process eventing - emission, transmission, receipt and handling of messages happened in the same process. It can be as simple as that.
+This is a simple example of in-process eventing - emission, transmission,
+receipt and handling of messages happened in the same process. It can be as
+simple as that.
 
 👉 Exit the REPL session.
 
-> For more info on using the cds REPL, see the [Further reading](#further-reading) section below.
+> For more info on using the cds REPL, see the [Further
+> reading](#further-reading) section below.
 
 ## Explore file-based messaging
 
-This is what our Ex01Service definition looks like right now, from `srv/ex01-service.cds`:
+This is what our Ex01Service definition looks like right now, from
+`srv/ex01-service.cds`:
 
 ```cds
 using { sap.capire.bookshop as my } from '../db/schema';
@@ -102,7 +123,9 @@ Let's define an event, and emit it.
 
 ### Switch the classics data back to the default development profile
 
-Before we start, and to keep things simple, let's switch back the authors, books and genres data from within the classics profile back to the default, i.e. let's move:
+Before we start, and to keep things simple, let's switch back the authors,
+books and genres data from within the classics profile back to the default,
+i.e. let's move:
 
 ```text
 db
@@ -144,7 +167,9 @@ db
 mv db/classics/data/ db/ && rm -rf db/classics/
 ```
 
-👉 Also, to keep things clean, remove the corresponding entry in `package.json#cds.requires`, and stay in the file as we'll be adding something in the next part:
+👉 Also, to keep things clean, remove the corresponding entry in
+`package.json#cds.requires`, and stay in the file as we'll be adding something
+in the next part:
 
 ```text
   "cds": {
@@ -175,9 +200,12 @@ mv db/classics/data/ db/ && rm -rf db/classics/
 
 ### Declare a requirement for file-based messaging
 
-OK, the first thing we need to do is define a requirement for messaging. And for our local development scenario, we should use file-based messaging, which is the default.
+OK, the first thing we need to do is define a requirement for messaging. And
+for our local development scenario, we should use file-based messaging, which
+is the default.
 
-👉 Add a `messaging` section within `package.json#cds.requires`, so it looks like this:
+👉 Add a `messaging` section within `package.json#cds.requires`, so it looks
+like this:
 
 ```json
   "cds": {
@@ -214,9 +242,12 @@ OK, the first thing we need to do is define a requirement for messaging. And for
 
 ### Define an event
 
-In the previous exercise we created the "milton" user and gave them the "backoffice" role which allowed them to perform `WRITE` semantic operations on books. Let's define an event that should be emitted when a book is deleted.
+In the previous exercise we created the "milton" user and gave them the
+"backoffice" role which allowed them to perform `WRITE` semantic operations on
+books. Let's define an event that should be emitted when a book is deleted.
 
-👉 First, declare that by adding a [custom event definition] "bookremoved" to the service in `srv/ex01-service.cds`:
+👉 First, declare that by adding a [custom event definition] "bookremoved" to
+the service in `srv/ex01-service.cds`:
 
 ```cds
 ...
@@ -227,11 +258,13 @@ In the previous exercise we created the "milton" user and gave them the "backoff
 ...
 ```
 
-The type structure (`{ ... }`) is deliberately as compact as possible for this example, designed to convey just the ID of the book that was removed.
+The type structure (`{ ... }`) is deliberately as compact as possible for this
+example, designed to convey just the ID of the book that was removed.
 
 ### Add handler code to emit the event
 
-Now it's time to define when and how that event should be emitted. Let's start simple, with a temporary `console.log` statement.
+Now it's time to define when and how that event should be emitted. Let's start
+simple, with a temporary `console.log` statement.
 
 👉 Create `srv/ex01-service.js` with the following content:
 
@@ -251,7 +284,11 @@ class Ex01Service extends cds.ApplicationService { init() {
 module.exports = Ex01Service
 ```
 
-This defines an "after" phase handler for DELETE events (yes, let's use the word "event" here too) relating to the `Books` entity. The signature of an [after handler] is such that the first parameter is the data relating to the event, and the second parameter is the request object. In the request object there's the data; let's have a look at what that is in this context.
+This defines an "after" phase handler for DELETE events (yes, let's use the
+word "event" here too) relating to the `Books` entity. The signature of an
+[after handler] is such that the first parameter is the data relating to the
+event, and the second parameter is the request object. In the request object
+there's the data; let's have a look at what that is in this context.
 
 👉 Start up the CAP server again, like this:
 
@@ -259,7 +296,8 @@ This defines an "after" phase handler for DELETE events (yes, let's use the word
 cds w
 ```
 
-Just out of interest, notice in the log output that instead of the built-in service implementation:
+Just out of interest, notice in the log output that instead of the built-in
+service implementation:
 
 ```log
 [cds] - serving Ex01Service {
@@ -274,7 +312,9 @@ our new custom implementation is now in play for the Ex01Service:
 [cds] - serving Ex01Service { impl: 'srv/ex01-service.js', path: '/ex01' }
 ```
 
-While we're looking at the log output from the CAP server, we can also see that the "file-based-messaging" channel is active, owing to the `messaging` entry we added to `package.json#cds.requires`:
+While we're looking at the log output from the CAP server, we can also see that
+the "file-based-messaging" channel is active, owing to the `messaging` entry we
+added to `package.json#cds.requires`:
 
 ```log
 [cds] - connect to messaging > file-based-messaging
@@ -307,15 +347,22 @@ to:
 this.emit('bookremoved', req.data)
 ```
 
-👉 At this point, the CAP server should have restarted; if not, give it a nudge by heading over to the terminal session in which it's running and pressing Enter.
+👉 At this point, the CAP server should have restarted; if not, give it a nudge
+by heading over to the terminal session in which it's running and pressing
+Enter.
 
 ### Start monitoring the message channel
 
-The message channel we're using here for this local context is [file-based messaging]. Event messages are stored and queued in a file. Where is that file? It's called `.cds-msg-box` and sits alongside another local development related file (`.cds-services.json`) in your home directory.
+The message channel we're using here for this local context is [file-based
+messaging]. Event messages are stored and queued in a file. Where is that file?
+It's called `.cds-msg-box` and sits alongside another local development related
+file (`.cds-services.json`) in your home directory.
 
-> If a CAP file is in your home directory, it's a big clue that it's for local development only.
+> If a CAP file is in your home directory, it's a big clue that it's for local
+> development only.
 
-👉 In a separate terminal session, ensure the file exists and start monitoring the contents:
+👉 In a separate terminal session, ensure the file exists and start monitoring
+the contents:
 
 ```bash
 touch ~/.cds-msg-box \
@@ -326,9 +373,11 @@ touch ~/.cds-msg-box \
 
 The moment of truth is upon us!
 
-👉 In the terminal session where you recently deleted "The Raven", bring up the command again and resend the request:
+👉 In the terminal session where you recently deleted "The Raven", bring up the
+command again and resend the request:
 
-> Because the CAP server is running with an in-memory SQLite database, we benefit from the book data being restored on each restart.
+> Because the CAP server is running with an in-memory SQLite database, we
+> benefit from the book data being restored on each restart.
 
 ```bash
 curl -X DELETE -u milton:dontmovemydesk localhost:4004/ex01/Books/251
@@ -342,13 +391,16 @@ While the CAP server log emits the usual:
 [odata] - DELETE /ex01/Books/251
 ```
 
-we also now see that something has been written to our file-based messaging store:
+we also now see that something has been written to our file-based messaging
+store:
 
 ```log
 Ex01Service.bookremoved {"data":{"ID":251},"headers":{"x-correlation-id":"c72e2a47-2faf-4bcb-9f54-37ebb2ca88a6"}}
 ```
 
-But what happens now? How is such a message subsequently received? We'll find out with a more comprehensive example in the next exercise where we also learn how to manage a larger scale CAP project, with independent services, locally.
+But what happens now? How is such a message subsequently received? We'll find
+out with a more comprehensive example in the next exercise where we also learn
+how to manage a larger scale CAP project, with independent services, locally.
 
 ---
 
