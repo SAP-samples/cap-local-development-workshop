@@ -1,0 +1,10 @@
+[
+  {
+    "ID": 42,
+    "name": "Douglas Adams",
+    "dateOfBirth": "1952-03-11",
+    "dateOfDeath": "2001-05-11",
+    "placeOfBirth": "Cambridge, England",
+    "placeOfDeath": "Montecito, California"
+  }
+]
