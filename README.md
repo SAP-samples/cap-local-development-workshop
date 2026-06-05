@@ -29,7 +29,7 @@ Your own development environment for CAP Node.js already set up and working, wit
 
 In both cases:
 
-  - An active trial account on SAP Business Technology Platform, with a Cloud Foundry environment instance (see [this tutorial] for details) - this will be needed for the last exercise, and we may be able to supply temporary access for participants
+- An active trial account on SAP Business Technology Platform, with a Cloud Foundry environment instance (see [this tutorial] for details) - this will be needed for the last exercise, and we may be able to supply temporary access for participants
 
 ## Exercises
 
@@ -80,4 +80,3 @@ Copyright (c) 2025 SAP SE or an SAP affiliate company. All rights reserved. This
 [local messaging]: https://cap.cloud.sap/docs/node.js/messaging#local-messaging
 [file-based messaging]: https://cap.cloud.sap/docs/node.js/messaging#file-based
 [serving UIs]: https://cap.cloud.sap/docs/get-started/in-a-nutshell#uis
-
