@@ -1,6 +1,7 @@
 # CAP local development workshop
 
-[![REUSE status](https://api.reuse.software/badge/github.com/SAP-samples/cap-local-development-workshop)](https://api.reuse.software/info/github.com/SAP-samples/cap-local-development-workshop)
+[![REUSE
+status](https://api.reuse.software/badge/github.com/SAP-samples/cap-local-development-workshop)](https://api.reuse.software/info/github.com/SAP-samples/cap-local-development-workshop)
 
 ## Description
 
