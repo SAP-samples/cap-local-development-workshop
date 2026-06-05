@@ -80,3 +80,4 @@ Copyright (c) 2025 SAP SE or an SAP affiliate company. All rights reserved. This
 [local messaging]: https://cap.cloud.sap/docs/node.js/messaging#local-messaging
 [file-based messaging]: https://cap.cloud.sap/docs/node.js/messaging#file-based
 [serving UIs]: https://cap.cloud.sap/docs/get-started/in-a-nutshell#uis
+
